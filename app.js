@@ -17,42 +17,95 @@ function showScreen(screenId) {
 
 // 2. Ініціалізація гри при завантаженні сторінки
 function init() {
-  // Завантажуємо збережений стан
   loadState();
 
-  // Якщо ім'я гравця вже збережене, перенаправляємо на головний екран
+  // Якщо ім'я гравця вже збережене, скеровуємо на останній активний екран
   if (gameState.playerName) {
-    document.getElementById('home-player-name').textContent = gameState.playerName;
+    updateUI();
     showScreen(gameState.currentScreen === 'screen-registration' ? 'screen-home' : gameState.currentScreen);
   } else {
-    // Якщо імені немає — показуємо екран реєстрації
     showScreen('screen-registration');
   }
 
-  // Налаштовуємо слухачі подій
   setupEventListeners();
 }
 
-// 3. Обробка кліків та дій користувача
+// 3. Оновлення текстових полів на екранах відповідно до стану
+function updateUI() {
+  const nameFields = ['home-player-name', 'settings-name'];
+  
+  nameFields.forEach(fieldId => {
+    const el = document.getElementById(fieldId);
+    if (el) {
+      if (el.tagName === 'INPUT') {
+        el.value = gameState.playerName;
+      } else {
+        el.textContent = gameState.playerName;
+      }
+    }
+  });
+}
+
+// 4. Обробка кліків та дій користувача
 function setupEventListeners() {
+  // --- ЕКРАН РЕЄСТРАЦІЇ ---
   const btnRegister = document.getElementById('btn-register');
   const regInput = document.getElementById('reg-name');
 
-  // Клік по кнопці реєстрації
   btnRegister.addEventListener('click', () => {
     const name = regInput.value.trim();
     if (name === '') {
-      alert("Будь ласка, введіть ім'я свого бійця!");
+      alert("Please enter your fighter's name!");
       return;
     }
-
-    // Зберігаємо ім'я у нашому State
     updateState({ playerName: name });
+    updateUI();
+    showScreen('screen-home');
+  });
 
-    // Підставляємо ім'я на головний екран
-    document.getElementById('home-player-name').textContent = name;
+  // --- НАВІГАЦІЯ З ГОЛОВНОГО ЕКРАНУ ---
+  const btnToSettings = document.getElementById('btn-to-settings');
+  const btnToCharacter = document.getElementById('btn-to-character');
 
-    // Перемикаємо екран на головний
+  btnToSettings.addEventListener('click', () => {
+    // Перед показом екрану налаштувань, запишемо поточне ім'я в інпут
+    document.getElementById('settings-name').value = gameState.playerName;
+    showScreen('screen-settings');
+  });
+
+  btnToCharacter.addEventListener('click', () => {
+    showScreen('screen-character');
+  });
+
+  // --- ЕКРАН НАЛАШТУВАНЬ ---
+  const btnSaveSettings = document.getElementById('btn-save-settings');
+  const btnResetGame = document.getElementById('btn-reset-game');
+  const btnSettingsBack = document.querySelector('.btn-settings-back');
+  const settingsInput = document.getElementById('settings-name');
+
+  // Збереження нового імені
+  btnSaveSettings.addEventListener('click', () => {
+    const newName = settingsInput.value.trim();
+    if (newName === '') {
+      alert("Fighter's name cannot be empty!");
+      return;
+    }
+    updateState({ playerName: newName });
+    updateUI();
+    alert("Changes saved successfully! 💾");
+  });
+
+  // Повна очистка прогресу (Reset)
+  btnResetGame.addEventListener('click', () => {
+    if (confirm("Are you sure you want to reset all progress? This will delete your character!")) {
+      localStorage.clear();
+      // Перезавантажуємо сторінку, щоб скинути всі змінні в коді
+      window.location.reload();
+    }
+  });
+
+  // Кнопка назад з налаштувань
+  btnSettingsBack.addEventListener('click', () => {
     showScreen('screen-home');
   });
 }

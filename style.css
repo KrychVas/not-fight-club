@@ -90,3 +90,18 @@ button:active {
   max-width: 300px;
   margin: 0 auto;
 }
+
+label {
+  display: block;
+  margin-bottom: -5px;
+  font-weight: bold;
+}
+
+.btn-back {
+  width: 100%;
+}
+
+/* Окремо підсвітимо кнопку скидання прогресу при наведенні */
+#btn-reset-game:hover {
+  background-color: #eb4d4b !important;
+}

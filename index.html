@@ -39,7 +39,13 @@
 
     <section id="screen-settings" class="screen hidden">
       <h2>Settings</h2>
-      <button class="btn-back">Back</button>
+      <div class="form-group">
+        <label for="settings-name" style="text-align: left; font-size: 14px; color: #aaa;">Change Fighter's Name:</label>
+        <input type="text" id="settings-name" placeholder="Enter new name..." autocomplete="off">
+        <button id="btn-save-settings">Save Changes 💾</button>
+        <button id="btn-reset-game" style="background-color: #3e3e3e; margin-top: 10px;">Reset Progress 🔄</button>
+        <button class="btn-back btn-settings-back" style="background-color: #555; margin-top: 20px;">Back to Menu</button>
+      </div>
     </section>
 
     <section id="screen-battle" class="screen hidden">
