@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👊</text></svg>">
+  <title>Not Fight Club</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>👊 Not Fight Club</h1>
+  </header>
+
+  <main id="app-container">
+    
+    <section id="screen-registration" class="screen">
+      <h2>Fighter Registration</h2>
+      <div class="form-group">
+        <input type="text" id="reg-name" placeholder="Enter your fighter's name..." autocomplete="off">
+        <button id="btn-register">Enter the Club</button>
+      </div>
+    </section>
+
+    <section id="screen-home" class="screen hidden">
+      <h2>Welcome, <span id="home-player-name">Fighter</span>!</h2>
+      <div class="menu-buttons">
+        <button id="btn-start-battle" class="btn-primary">Start Battle ⚔️</button>
+        <button id="btn-to-character">My Character 🛡️</button>
+        <button id="btn-to-settings">Settings ⚙️</button>
+      </div>
+    </section>
+
+    <section id="screen-character" class="screen hidden">
+      <h2>Character Card</h2>
+      <button class="btn-back">Back</button>
+    </section>
+
+    <section id="screen-settings" class="screen hidden">
+      <h2>Settings</h2>
+      <button class="btn-back">Back</button>
+    </section>
+
+    <section id="screen-battle" class="screen hidden">
+      <h2>Battle Arena</h2>
+    </section>
+
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
