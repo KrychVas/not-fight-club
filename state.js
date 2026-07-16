@@ -4,6 +4,7 @@ const STORAGE_KEY = 'not-fight-club-state';
 // Початковий (дефолтний) стан, якщо гравець зайшов уперше
 const defaultState = {
   playerName: '',
+  playerAvatar: 'assets/avatars/ren.gif', // Твій крутий блондин за замовчуванням!
   wins: 0,
   losses: 0,
   currentScreen: 'screen-registration'
@@ -22,6 +23,8 @@ export function loadState() {
       console.error("Помилка читання стану з localStorage:", e);
       gameState = { ...defaultState };
     }
+  } else {
+    gameState = { ...defaultState };
   }
   return gameState;
 }

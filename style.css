@@ -35,7 +35,6 @@ h2 {
   color: #ff4757;
 }
 
-/* Наш головний інструмент навігації */
 .hidden {
   display: none !important;
 }
@@ -101,7 +100,80 @@ label {
   width: 100%;
 }
 
-/* Окремо підсвітимо кнопку скидання прогресу при наведенні */
 #btn-reset-game:hover {
   background-color: #eb4d4b !important;
+}
+
+.character-profile img,
+.avatar-option {
+  image-rendering: pixelated; 
+  image-rendering: crisp-edges; 
+  
+
+  object-fit: contain; 
+}
+
+#char-current-avatar {
+  width: 120px;
+  height: 120px;
+  display: block;
+  margin: 0 auto 15px auto;
+}
+
+.avatar-grid img {
+  width: 64px;
+  height: 64px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.avatar-grid img:hover {
+  transform: scale(1.1);
+}
+
+/* --- СТИЛІ ДЛЯ АНІМОВАНИХ АВАТАРОК --- */
+
+/* Головний великий аватар */
+#char-current-avatar {
+  width: 110px !important;       
+  height: 110px !important;
+  object-fit: contain;          
+  object-position: bottom center; 
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  display: block;
+  margin: 0 auto 15px auto;
+  filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.5)); /* Додаємо гарну тінь під бійця */
+}
+
+.avatar-grid {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.avatar-option {
+  width: 56px !important;        
+  height: 56px !important;
+  object-fit: contain;
+  object-position: bottom center; 
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.03); 
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.avatar-option:hover {
+  transform: scale(1.08);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.avatar-option.selected {
+  border-color: #ff3e3e;         
+  background-color: rgba(255, 62, 62, 0.15);
+  box-shadow: 0 0 10px rgba(255, 62, 62, 0.3);
 }

@@ -34,7 +34,24 @@
 
     <section id="screen-character" class="screen hidden">
       <h2>Character Card</h2>
-      <button class="btn-back">Back</button>
+      
+      <div class="character-profile">
+        <img id="char-current-avatar" src="assets/avatars/ren.gif" alt="Current Avatar">
+        <h3 id="char-player-name">Fighter</h3>
+        <p class="stats">Wins: <span id="char-wins">0</span> | Losses: <span id="char-losses">0</span></p>
+      </div>
+
+      <div class="avatar-selection">
+        <h4>Choose Your Fighter:</h4>
+        <div class="avatar-grid">
+          <img class="avatar-option" src="assets/avatars/ren.gif" data-avatar="assets/avatars/ren.gif" alt="Ren">
+          <img class="avatar-option" src="assets/avatars/jon.gif" data-avatar="assets/avatars/jon.gif" alt="Jon">
+          <img class="avatar-option" src="assets/avatars/gal.gif" data-avatar="assets/avatars/gal.gif" alt="Gal">
+          <img class="avatar-option" src="assets/avatars/cho.gif" data-avatar="assets/avatars/cho.gif" alt="Cho">
+        </div>
+      </div>
+
+      <button class="btn-back btn-character-back" style="background-color: #555; margin-top: 20px;">Back to Menu</button>
     </section>
 
     <section id="screen-settings" class="screen hidden">

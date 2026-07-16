@@ -10,7 +10,6 @@ function showScreen(screenId) {
   const activeScreen = document.getElementById(screenId);
   if (activeScreen) {
     activeScreen.classList.remove('hidden');
-    // Оновлюємо поточний екран у стані та зберігаємо
     updateState({ currentScreen: screenId });
   }
 }
@@ -19,7 +18,6 @@ function showScreen(screenId) {
 function init() {
   loadState();
 
-  // Якщо ім'я гравця вже збережене, скеровуємо на останній активний екран
   if (gameState.playerName) {
     updateUI();
     showScreen(gameState.currentScreen === 'screen-registration' ? 'screen-home' : gameState.currentScreen);
@@ -30,10 +28,10 @@ function init() {
   setupEventListeners();
 }
 
-// 3. Оновлення текстових полів на екранах відповідно до стану
+// 3. Оновлення інтерфейсу відповідно до стану (Ім'я, Статистика, Аватар)
 function updateUI() {
-  const nameFields = ['home-player-name', 'settings-name'];
-  
+  // Оновлюємо текстові поля з іменем
+  const nameFields = ['home-player-name', 'settings-name', 'char-player-name'];
   nameFields.forEach(fieldId => {
     const el = document.getElementById(fieldId);
     if (el) {
@@ -42,6 +40,28 @@ function updateUI() {
       } else {
         el.textContent = gameState.playerName;
       }
+    }
+  });
+
+  // Оновлюємо статистику перемог і поразок
+  const winsEl = document.getElementById('char-wins');
+  const lossesEl = document.getElementById('char-losses');
+  if (winsEl) winsEl.textContent = gameState.wins;
+  if (lossesEl) lossesEl.textContent = gameState.losses;
+
+  // Оновлюємо поточний аватар на сторінці персонажа
+  const currentAvatarImg = document.getElementById('char-current-avatar');
+  if (currentAvatarImg) {
+    currentAvatarImg.src = gameState.playerAvatar || 'assets/avatars/ren1.png';
+  }
+
+  // Підсвічуємо вибрану іконку в галереї аватарок
+  const avatarOptions = document.querySelectorAll('.avatar-option');
+  avatarOptions.forEach(img => {
+    if (img.getAttribute('data-avatar') === gameState.playerAvatar) {
+      img.classList.add('selected');
+    } else {
+      img.classList.remove('selected');
     }
   });
 }
@@ -68,14 +88,31 @@ function setupEventListeners() {
   const btnToCharacter = document.getElementById('btn-to-character');
 
   btnToSettings.addEventListener('click', () => {
-    // Перед показом екрану налаштувань, запишемо поточне ім'я в інпут
     document.getElementById('settings-name').value = gameState.playerName;
     showScreen('screen-settings');
   });
 
   btnToCharacter.addEventListener('click', () => {
+    updateUI(); // Оновлюємо картинки перед показом екрана
     showScreen('screen-character');
   });
+
+  // --- ЕКРАН ПЕРСОНАЖА (Вибір аватарок) ---
+  const avatarOptions = document.querySelectorAll('.avatar-option');
+  avatarOptions.forEach(option => {
+    option.addEventListener('click', (e) => {
+      const selectedUrl = e.target.getAttribute('data-avatar');
+      updateState({ playerAvatar: selectedUrl });
+      updateUI();
+    });
+  });
+
+  const btnCharacterBack = document.querySelector('.btn-character-back');
+  if (btnCharacterBack) {
+    btnCharacterBack.addEventListener('click', () => {
+      showScreen('screen-home');
+    });
+  }
 
   // --- ЕКРАН НАЛАШТУВАНЬ ---
   const btnSaveSettings = document.getElementById('btn-save-settings');
@@ -83,7 +120,6 @@ function setupEventListeners() {
   const btnSettingsBack = document.querySelector('.btn-settings-back');
   const settingsInput = document.getElementById('settings-name');
 
-  // Збереження нового імені
   btnSaveSettings.addEventListener('click', () => {
     const newName = settingsInput.value.trim();
     if (newName === '') {
@@ -95,16 +131,13 @@ function setupEventListeners() {
     alert("Changes saved successfully! 💾");
   });
 
-  // Повна очистка прогресу (Reset)
   btnResetGame.addEventListener('click', () => {
     if (confirm("Are you sure you want to reset all progress? This will delete your character!")) {
       localStorage.clear();
-      // Перезавантажуємо сторінку, щоб скинути всі змінні в коді
       window.location.reload();
     }
   });
 
-  // Кнопка назад з налаштувань
   btnSettingsBack.addEventListener('click', () => {
     showScreen('screen-home');
   });
