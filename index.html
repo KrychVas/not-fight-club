@@ -76,6 +76,11 @@
           <h3>Your Fighter</h3>
           <img id="arena-player-avatar" src="assets/avatars/ren.gif" alt="Player">
           <div id="arena-player-name" class="fighter-name">Fighter</div>
+          
+          <div class="hp-bar-container">
+            <div id="player-hp-bar" class="hp-bar"></div>
+          </div>
+          <div id="player-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
         </div>
 
         <div class="vs-label">VS</div>
@@ -84,16 +89,28 @@
           <h3>Enemy</h3>
           <img id="arena-enemy-avatar" src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22 x=%2215%22>❓</text></svg>" alt="Enemy">
           <div id="arena-enemy-name" class="fighter-name">Choose Opponent</div>
+          
+          <div class="hp-bar-container">
+            <div id="enemy-hp-bar" class="hp-bar"></div>
+          </div>
+          <div id="enemy-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
         </div>
       </div>
 
-      <!-- Вибір супротивника (сюди JS підставить унікальних ворогів) -->
       <div class="enemy-selection">
         <h4>Select Your Target:</h4>
         <div class="enemy-grid"></div>
       </div>
 
-      <!-- Кнопки дій на арені -->
+      <div id="battle-log" class="battle-log">
+        <div class="log-message log-system">⚔️ Choose an opponent and press FIGHT! to start...</div>
+      </div>
+
+      <div id="combat-actions" class="combat-actions hidden">
+        <button id="btn-attack" style="background-color: #ff4757;">Attack ⚔️</button>
+        <button id="btn-defend" style="background-color: #2ed573;">Defend 🛡️</button>
+      </div>
+
       <div class="battle-actions">
         <button id="btn-fight-now" class="btn-primary" disabled style="margin-top: 15px; opacity: 0.5; cursor: not-allowed;">FIGHT! 👊</button>
         <button class="btn-back btn-battle-back" style="background-color: #555; margin-top: 10px; width: 100%;">Back to Menu</button>

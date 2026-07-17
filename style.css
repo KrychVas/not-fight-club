@@ -175,81 +175,56 @@ label {
   box-shadow: 0 0 10px rgba(255, 62, 62, 0.3);
 }
 
-.arena-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 20px 0;
-  background: rgba(0, 0, 0, 0.3);
-  padding: 15px;
-  border-radius: 10px;
-  border: 1px solid #333;
+/* Бойовий інтерфейс: ХП та Лог */
+.hp-bar-container {
+  width: 100%;
+  background-color: #444;
+  border-radius: 4px;
+  height: 14px;
+  margin-top: 8px;
+  overflow: hidden;
+  border: 1px solid #000;
 }
 
-.fighter-card {
-  width: 40%;
-  text-align: center;
+.hp-bar {
+  width: 100%; /* Починаємо з 100% */
+  height: 100%;
+  background-color: #2ed573; /* Зелений колір здоров'я */
+  transition: width 0.3s ease-in-out, background-color 0.3s ease;
 }
 
-.fighter-card h3 {
-  font-size: 14px;
-  color: #aaa;
-  margin-bottom: 5px;
-  text-transform: uppercase;
-}
+/* Коли залишається мало ХП, міняємо колір у JS */
+.hp-bar.warning { background-color: #ffa502; }
+.hp-bar.danger { background-color: #ff4757; }
 
-.fighter-card img {
-  width: 90px !important;
-  height: 90px !important;
-  object-fit: contain;
-  object-position: bottom center;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-}
-
-.fighter-name {
-  font-weight: bold;
-  margin-top: 5px;
-  color: #fff;
-}
-
-.vs-label {
-  font-size: 24px;
-  font-weight: bold;
-  color: #ff3e3e;
-  text-shadow: 0 0 10px rgba(255, 62, 62, 0.5);
-}
-
-.enemy-selection {
+.battle-log {
+  width: 100%;
+  max-height: 120px;
+  min-height: 80px;
+  background-color: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 6px;
   margin-top: 20px;
+  padding: 10px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  text-align: left;
+  overflow-y: auto;
+  color: #a4b0be;
 }
 
-.enemy-grid {
+.log-message {
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+.log-player { color: #2ed573; }
+.log-enemy { color: #ff4757; }
+.log-system { color: #eccc68; font-weight: bold; }
+
+/* Приховуємо бойові кнопки, поки бій не почався */
+.combat-actions {
   display: flex;
   justify-content: center;
-  gap: 15px;
-  margin-top: 10px;
-}
-
-.enemy-option {
-  width: 64px !important;
-  height: 64px !important;
-  object-fit: contain;
-  object-position: bottom center;
-  image-rendering: pixelated;
-  cursor: pointer;
-  border: 2px solid transparent;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.03);
-  transition: all 0.2s ease;
-}
-
-.enemy-option:hover {
-  transform: scale(1.1);
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.enemy-option.selected {
-  border-color: #ff3e3e;
-  background: rgba(255, 62, 62, 0.15);
+  gap: 10px;
+  margin-top: 15px;
 }

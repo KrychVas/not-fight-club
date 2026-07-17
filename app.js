@@ -142,15 +142,61 @@ function setupEventListeners() {
     showScreen('screen-home');
   });
 
-  // --- ЕКРАН БОЮ (ВИБІР СУПЕРНИКА) ---
+// --- ЕКРАН БОЮ (ВИБІР СУПЕРНИКА ТА АКТИВНИЙ БІЙ) ---
   const btnStartBattle = document.getElementById('btn-start-battle');
   const btnFightNow = document.getElementById('btn-fight-now');
   const btnBattleBack = document.querySelector('.btn-battle-back');
+  
+  const btnAttack = document.getElementById('btn-attack');
+  const btnDefend = document.getElementById('btn-defend');
+  const combatActions = document.getElementById('combat-actions');
+  const enemySelectionBlock = document.querySelector('.enemy-selection');
+  const battleLog = document.getElementById('battle-log');
+
+  // Змінні для збереження поточного HP в пам'яті
+  let playerHP = 100;
+  let enemyHP = 100;
+  let currentEnemyName = '';
+  let isPlayerDefending = false; // Чи стоїть гравець у блоці
+
+  // Функція для додавання записів у лог бою
+  function logMessage(text, type = 'system') {
+    if (!battleLog) return;
+    const msg = document.createElement('div');
+    msg.className = `log-message log-${type}`;
+    msg.textContent = text;
+    battleLog.appendChild(msg);
+    battleLog.scrollTop = battleLog.scrollHeight; // Автоскрол вниз
+  }
+
+  // Функція оновлення смужок HP на екрані
+  function updateHPBars() {
+    const pBar = document.getElementById('player-hp-bar');
+    const pText = document.getElementById('player-hp-text');
+    const eBar = document.getElementById('enemy-hp-bar');
+    const eText = document.getElementById('enemy-hp-text');
+
+    if (pBar && pText) {
+      pBar.style.width = `${playerHP}%`;
+      pText.textContent = `${playerHP} / 100`;
+      pBar.className = 'hp-bar';
+      if (playerHP <= 20) pBar.classList.add('danger');
+      else if (playerHP <= 50) pBar.classList.add('warning');
+    }
+
+    if (eBar && eText) {
+      eBar.style.width = `${enemyHP}%`;
+      eText.textContent = `${enemyHP} / 100`;
+      eBar.className = 'hp-bar';
+      if (enemyHP <= 20) eBar.classList.add('danger');
+      else if (enemyHP <= 50) eBar.classList.add('warning');
+    }
+  }
 
   // Клік на кнопку "Start Battle" на головному екрані
   if (btnStartBattle) {
     btnStartBattle.addEventListener('click', () => {
-      // 1. Оновлюємо картку гравця на арені перед показом
+      // 1. Оновлюємо картку гравця на arena перед показом
       const arenaPlayerImg = document.getElementById('arena-player-avatar');
       const arenaPlayerName = document.getElementById('arena-player-name');
       
@@ -165,6 +211,7 @@ function setupEventListeners() {
 
       // 3. Блокуємо кнопку FIGHT!
       if (btnFightNow) {
+        btnFightNow.style.display = 'block';
         btnFightNow.disabled = true;
         btnFightNow.style.opacity = '0.5';
         btnFightNow.style.cursor = 'not-allowed';
@@ -173,9 +220,8 @@ function setupEventListeners() {
       // --- ДИНАМІЧНЕ СТВОРЕННЯ СУПЕРНИКІВ БЕЗ ПОВТОРІВ ---
       const enemyGrid = document.querySelector('.enemy-grid');
       if (enemyGrid) {
-        enemyGrid.innerHTML = ''; // Очищаємо сітку перед кожним входом
+        enemyGrid.innerHTML = ''; 
 
-        // Повний список усіх 7 персонажів у грі
         const allCharacters = [
           { name: 'Boss', avatar: 'assets/avatars/boss.gif' },
           { name: 'Cho', avatar: 'assets/avatars/cho.gif' },
@@ -186,10 +232,8 @@ function setupEventListeners() {
           { name: 'Ryuken', avatar: 'assets/avatars/ryuken.gif' }
         ];
 
-        // Фільтруємо список: залишаємо лише тих, чий аватар НЕ збігається з аватаром гравця
         const availableEnemies = allCharacters.filter(char => char.avatar !== gameState.playerAvatar);
 
-        // Перебираємо відфільтрованих ворогів і додаємо їх у HTML
         availableEnemies.forEach(enemy => {
           const img = document.createElement('img');
           img.className = 'enemy-option';
@@ -198,16 +242,13 @@ function setupEventListeners() {
           img.setAttribute('data-enemy-name', enemy.name);
           img.setAttribute('data-enemy-avatar', enemy.avatar);
 
-          // Одразу вішаємо подію кліку на новоствореного ворога
           img.addEventListener('click', () => {
             if (arenaEnemyImg) arenaEnemyImg.src = enemy.avatar;
             if (arenaEnemyName) arenaEnemyName.textContent = enemy.name;
 
-            // Підсвічування обраного ворога
             document.querySelectorAll('.enemy-option').forEach(opt => opt.classList.remove('selected'));
             img.classList.add('selected');
 
-            // Активація кнопки битви
             if (btnFightNow) {
               btnFightNow.disabled = false;
               btnFightNow.style.opacity = '1';
@@ -219,25 +260,136 @@ function setupEventListeners() {
         });
       }
 
-      // Перемикаємося на екран бою
       showScreen('screen-battle');
     });
   }
 
-  // Кнопка назад з екрану бою в головне меню (Тепер вона працює ЗАВЖДИ незалежно)
-  if (btnBattleBack) {
-    btnBattleBack.addEventListener('click', () => {
-      showScreen('screen-home');
+  // Натискання на кнопку FIGHT! (Початок бою)
+  if (btnFightNow) {
+    btnFightNow.addEventListener('click', () => {
+      currentEnemyName = document.getElementById('arena-enemy-name').textContent;
+
+      // 1. Скидаємо HP до 100%
+      playerHP = 100;
+      enemyHP = 100;
+      isPlayerDefending = false;
+      updateHPBars();
+
+      // 2. Очищаємо лог і пишемо стартове повідомлення
+      if (battleLog) battleLog.innerHTML = '';
+      logMessage(`⚔️ Battle started! ${gameState.playerName} vs ${currentEnemyName}!`, 'system');
+
+      // 3. Міняємо інтерфейс
+      if (enemySelectionBlock) enemySelectionBlock.classList.add('hidden');
+      if (combatActions) combatActions.classList.remove('hidden');
+      
+      btnFightNow.style.display = 'none';
+      if (btnBattleBack) btnBattleBack.style.display = 'none'; // Ховаємо кнопку "Назад" на час бою
     });
   }
 
-  // Кнопка FIGHT!
-  if (btnFightNow) {
-    btnFightNow.addEventListener('click', () => {
-      alert(`ROUND 1... FIGHT! 👊 `);
+  // Функція для ходу ворога (ШІ)
+  function enemyTurn() {
+    if (enemyHP <= 0) return; // Якщо ворог уже програв, він не б'є
+
+    setTimeout(() => {
+      // Рандомний удар ворога від 8 до 18 демеджу
+      let damage = Math.floor(Math.random() * 11) + 8; 
+
+      if (isPlayerDefending) {
+        damage = Math.floor(damage / 2); // Зменшуємо шкоду вдвічі, якщо гравець у блоці
+        logMessage(`🛡️ ${gameState.playerName} blocks the attack! Damage reduced.`, 'player');
+        isPlayerDefending = false; // Скидаємо блок після ходу
+      }
+
+      playerHP = Math.max(0, playerHP - damage);
+      updateHPBars();
+      logMessage(`💥 ${currentEnemyName} hits back for ${damage} HP!`, 'enemy');
+
+      // Перевірка на програш гравця
+      if (playerHP <= 0) {
+        logMessage(`💀 You lost! ${currentEnemyName} celebrates victory.`, 'system');
+        endBattle(false);
+      }
+    }, 800); // Невелика затримка для реалістичності покроковості
+  }
+
+  // Кнопка АТАКА
+  if (btnAttack) {
+    btnAttack.addEventListener('click', () => {
+      const damage = Math.floor(Math.random() * 13) + 10; // 10-22 демеджу
+      enemyHP = Math.max(0, enemyHP - damage);
+      updateHPBars();
+      logMessage(`👊 ${gameState.playerName} hits opponent for ${damage} HP!`, 'player');
+
+      if (enemyHP <= 0) {
+        logMessage(`🏆 VICTORY! ${gameState.playerName} defeated ${currentEnemyName}!`, 'system');
+        endBattle(true);
+      } else {
+        enemyTurn(); // Якщо ворог живий, він б'є у відповідь
+      }
     });
   }
-} // Кінець функції setupEventListeners
+
+  // Кнопка ЗАХИСТ
+  if (btnDefend) {
+    btnDefend.addEventListener('click', () => {
+      isPlayerDefending = true;
+      logMessage(`🛡️ ${gameState.playerName} prepares to defend next turn.`, 'player');
+      enemyTurn(); 
+    });
+  }
+
+   // Функція завершення бою
+  function endBattle(isWin) {
+    // 1. Ховаємо бойові кнопки
+    if (combatActions) combatActions.classList.add('hidden');
+
+    // 2. Повертаємо блок вибору ворогів, щоб можна було грати знову
+    if (enemySelectionBlock) enemySelectionBlock.classList.remove('hidden');
+
+    // 3. Повертаємо кнопку "Назад" та робимо її активною
+    if (btnBattleBack) {
+      btnBattleBack.style.display = 'block';
+      btnBattleBack.textContent = 'Return to Menu';
+    }
+
+    // 4. Оновлюємо статистику в gameState
+    if (isWin) {
+      updateState({ wins: gameState.wins + 1 });
+    } else {
+      updateState({ losses: gameState.losses + 1 });
+    }
+    
+    // Оновлюємо інтерфейс головного меню та картки персонажа новими даними
+    updateUI(); 
+  }
+
+  // Кнопка назад з екрану бою в головне меню
+  if (btnBattleBack) {
+    btnBattleBack.addEventListener('click', () => {
+      // 1. Повертаємо відображення блоку вибору ворогів
+      if (enemySelectionBlock) enemySelectionBlock.classList.remove('hidden');
+      
+      // 2. Скидаємо кнопку FIGHT!: показуємо її, але блокуємо, поки не оберуть нового ворога
+      if (btnFightNow) {
+        btnFightNow.style.display = 'block';
+        btnFightNow.disabled = true;
+        btnFightNow.style.opacity = '0.5';
+        btnFightNow.style.cursor = 'not-allowed';
+      }
+      
+      // 3. Очищаємо підсвічування раніше обраного ворога в сітці
+      document.querySelectorAll('.enemy-option').forEach(opt => opt.classList.remove('selected'));
+      
+      // 4. Скидаємо текст кнопки назад на дефолтний
+      btnBattleBack.textContent = 'Back to Menu';
+      
+      // 5. Повертаємося на головний екран
+      showScreen('screen-home');
+    });
+  } 
+  }// Кінець функції setupEventListeners
 
 // Запускаємо гру, коли DOM готовий
 document.addEventListener('DOMContentLoaded', init);
