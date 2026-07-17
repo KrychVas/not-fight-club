@@ -141,7 +141,103 @@ function setupEventListeners() {
   btnSettingsBack.addEventListener('click', () => {
     showScreen('screen-home');
   });
-}
+
+  // --- ЕКРАН БОЮ (ВИБІР СУПЕРНИКА) ---
+  const btnStartBattle = document.getElementById('btn-start-battle');
+  const btnFightNow = document.getElementById('btn-fight-now');
+  const btnBattleBack = document.querySelector('.btn-battle-back');
+
+  // Клік на кнопку "Start Battle" на головному екрані
+  if (btnStartBattle) {
+    btnStartBattle.addEventListener('click', () => {
+      // 1. Оновлюємо картку гравця на арені перед показом
+      const arenaPlayerImg = document.getElementById('arena-player-avatar');
+      const arenaPlayerName = document.getElementById('arena-player-name');
+      
+      if (arenaPlayerImg) arenaPlayerImg.src = gameState.playerAvatar || 'assets/avatars/ren.gif';
+      if (arenaPlayerName) arenaPlayerName.textContent = gameState.playerName;
+
+      // 2. Скидаємо картку ворога до дефолту
+      const arenaEnemyImg = document.getElementById('arena-enemy-avatar');
+      const arenaEnemyName = document.getElementById('arena-enemy-name');
+      if (arenaEnemyImg) arenaEnemyImg.src = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22 x=%2215%22>❓</text></svg>';
+      if (arenaEnemyName) arenaEnemyName.textContent = 'Choose Opponent';
+
+      // 3. Блокуємо кнопку FIGHT!
+      if (btnFightNow) {
+        btnFightNow.disabled = true;
+        btnFightNow.style.opacity = '0.5';
+        btnFightNow.style.cursor = 'not-allowed';
+      }
+
+      // --- ДИНАМІЧНЕ СТВОРЕННЯ СУПЕРНИКІВ БЕЗ ПОВТОРІВ ---
+      const enemyGrid = document.querySelector('.enemy-grid');
+      if (enemyGrid) {
+        enemyGrid.innerHTML = ''; // Очищаємо сітку перед кожним входом
+
+        // Повний список усіх 7 персонажів у грі
+        const allCharacters = [
+          { name: 'Boss', avatar: 'assets/avatars/boss.gif' },
+          { name: 'Cho', avatar: 'assets/avatars/cho.gif' },
+          { name: 'Gal', avatar: 'assets/avatars/gal.gif' },
+          { name: 'Jon', avatar: 'assets/avatars/jon.gif' },
+          { name: 'Lodman', avatar: 'assets/avatars/lodman.gif' },
+          { name: 'Ren', avatar: 'assets/avatars/ren.gif' },
+          { name: 'Ryuken', avatar: 'assets/avatars/ryuken.gif' }
+        ];
+
+        // Фільтруємо список: залишаємо лише тих, чий аватар НЕ збігається з аватаром гравця
+        const availableEnemies = allCharacters.filter(char => char.avatar !== gameState.playerAvatar);
+
+        // Перебираємо відфільтрованих ворогів і додаємо їх у HTML
+        availableEnemies.forEach(enemy => {
+          const img = document.createElement('img');
+          img.className = 'enemy-option';
+          img.src = enemy.avatar;
+          img.alt = enemy.name;
+          img.setAttribute('data-enemy-name', enemy.name);
+          img.setAttribute('data-enemy-avatar', enemy.avatar);
+
+          // Одразу вішаємо подію кліку на новоствореного ворога
+          img.addEventListener('click', () => {
+            if (arenaEnemyImg) arenaEnemyImg.src = enemy.avatar;
+            if (arenaEnemyName) arenaEnemyName.textContent = enemy.name;
+
+            // Підсвічування обраного ворога
+            document.querySelectorAll('.enemy-option').forEach(opt => opt.classList.remove('selected'));
+            img.classList.add('selected');
+
+            // Активація кнопки битви
+            if (btnFightNow) {
+              btnFightNow.disabled = false;
+              btnFightNow.style.opacity = '1';
+              btnFightNow.style.cursor = 'pointer';
+            }
+          });
+
+          enemyGrid.appendChild(img);
+        });
+      }
+
+      // Перемикаємося на екран бою
+      showScreen('screen-battle');
+    });
+  }
+
+  // Кнопка назад з екрану бою в головне меню (Тепер вона працює ЗАВЖДИ незалежно)
+  if (btnBattleBack) {
+    btnBattleBack.addEventListener('click', () => {
+      showScreen('screen-home');
+    });
+  }
+
+  // Кнопка FIGHT!
+  if (btnFightNow) {
+    btnFightNow.addEventListener('click', () => {
+      alert(`ROUND 1... FIGHT! 👊 `);
+    });
+  }
+} // Кінець функції setupEventListeners
 
 // Запускаємо гру, коли DOM готовий
 document.addEventListener('DOMContentLoaded', init);

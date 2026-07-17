@@ -48,6 +48,9 @@
           <img class="avatar-option" src="assets/avatars/jon.gif" data-avatar="assets/avatars/jon.gif" alt="Jon">
           <img class="avatar-option" src="assets/avatars/gal.gif" data-avatar="assets/avatars/gal.gif" alt="Gal">
           <img class="avatar-option" src="assets/avatars/cho.gif" data-avatar="assets/avatars/cho.gif" alt="Cho">
+          <img class="avatar-option" src="assets/avatars/boss.gif" data-avatar="assets/avatars/boss.gif" alt="Boss">
+          <img class="avatar-option" src="assets/avatars/lodman.gif" data-avatar="assets/avatars/lodman.gif" alt="Lodman">
+          <img class="avatar-option" src="assets/avatars/ryuken.gif" data-avatar="assets/avatars/ryuken.gif" alt="Ryuken">
         </div>
       </div>
 
@@ -67,6 +70,34 @@
 
     <section id="screen-battle" class="screen hidden">
       <h2>Battle Arena</h2>
+      
+      <div class="arena-container">
+        <div class="fighter-card player-side">
+          <h3>Your Fighter</h3>
+          <img id="arena-player-avatar" src="assets/avatars/ren.gif" alt="Player">
+          <div id="arena-player-name" class="fighter-name">Fighter</div>
+        </div>
+
+        <div class="vs-label">VS</div>
+
+        <div class="fighter-card enemy-side">
+          <h3>Enemy</h3>
+          <img id="arena-enemy-avatar" src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22 x=%2215%22>❓</text></svg>" alt="Enemy">
+          <div id="arena-enemy-name" class="fighter-name">Choose Opponent</div>
+        </div>
+      </div>
+
+      <!-- Вибір супротивника (сюди JS підставить унікальних ворогів) -->
+      <div class="enemy-selection">
+        <h4>Select Your Target:</h4>
+        <div class="enemy-grid"></div>
+      </div>
+
+      <!-- Кнопки дій на арені -->
+      <div class="battle-actions">
+        <button id="btn-fight-now" class="btn-primary" disabled style="margin-top: 15px; opacity: 0.5; cursor: not-allowed;">FIGHT! 👊</button>
+        <button class="btn-back btn-battle-back" style="background-color: #555; margin-top: 10px; width: 100%;">Back to Menu</button>
+      </div>
     </section>
 
   </main>
