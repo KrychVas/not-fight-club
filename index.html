@@ -15,6 +15,7 @@
 
   <main id="app-container">
     
+    <!-- SCREEN 1: REGISTRATION -->
     <section id="screen-registration" class="screen">
       <h2>Fighter Registration</h2>
       <div class="form-group">
@@ -23,6 +24,7 @@
       </div>
     </section>
 
+    <!-- SCREEN 2: HOME MENU -->
     <section id="screen-home" class="screen hidden">
       <h2>Welcome, <span id="home-player-name">Fighter</span>!</h2>
       <div class="menu-buttons">
@@ -32,6 +34,7 @@
       </div>
     </section>
 
+    <!-- SCREEN 3: CHARACTER CARD -->
     <section id="screen-character" class="screen hidden">
       <h2>Character Card</h2>
       
@@ -57,6 +60,7 @@
       <button class="btn-back btn-character-back" style="background-color: #555; margin-top: 20px;">Back to Menu</button>
     </section>
 
+    <!-- SCREEN 4: SETTINGS -->
     <section id="screen-settings" class="screen hidden">
       <h2>Settings</h2>
       <div class="form-group">
@@ -68,49 +72,91 @@
       </div>
     </section>
 
+    <!-- SCREEN 5: BATTLE ARENA -->
     <section id="screen-battle" class="screen hidden">
       <h2>Battle Arena</h2>
       
+      <!-- ARENA LAYOUT WITH THREE COLUMNS -->
       <div class="arena-container">
+        
+        <!-- LEFT COLUMN: Player Profile & HP -->
         <div class="fighter-card player-side">
           <h3>Your Fighter</h3>
           <img id="arena-player-avatar" src="assets/avatars/ren.gif" alt="Player">
           <div id="arena-player-name" class="fighter-name">Fighter</div>
-          
           <div class="hp-bar-container">
             <div id="player-hp-bar" class="hp-bar"></div>
           </div>
           <div id="player-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
         </div>
 
-        <div class="vs-label">VS</div>
+        <!-- CENTER COLUMN: Combat Actions & Zone Selection -->
+        <div id="combat-actions" class="combat-actions hidden">
+          <h4>Choose 1 attack and 2 defence zones</h4>
+          
+          <!-- Columns Wrapper -->
+          <div class="zones-columns-wrapper">
+            
+            <!-- Attack Column -->
+            <div class="zone-column">
+              <span style="color: #ff4757; font-size: 12px; font-weight: bold; margin-bottom: 5px;">⚡ ATTACK</span>
+              <button type="button" class="btn-zone-attack" data-zone="Head">Head 🪖</button>
+              <button type="button" class="btn-zone-attack" data-zone="Neck">Neck 🎯</button>
+              <button type="button" class="btn-zone-attack" data-zone="Body">Body 🥋</button>
+              <button type="button" class="btn-zone-attack" data-zone="Belly">Belly 🔥</button>
+              <button type="button" class="btn-zone-attack" data-zone="Legs">Legs 🥾</button>
+            </div>
 
+            <!-- Vertical Separator Line -->
+            <div class="zone-divider" style="width: 1px; background: #444; align-self: stretch;"></div>
+
+            <!-- Defend Column -->
+            <div class="zone-column">
+              <span style="color: #2ed573; font-size: 12px; font-weight: bold; margin-bottom: 5px;">🛡️ DEFEND</span>
+              <button type="button" class="btn-zone-defend" data-zone="Head">Head 🪖</button>
+              <button type="button" class="btn-zone-defend" data-zone="Neck">Neck 🎯</button>
+              <button type="button" class="btn-zone-defend" data-zone="Body">Body 🥋</button>
+              <button type="button" class="btn-zone-defend" data-zone="Belly">Belly 🔥</button>
+              <button type="button" class="btn-zone-defend" data-zone="Legs">Legs 🥾</button>
+            </div>
+          </div>
+
+          <!-- Live Selected Zones Dynamic Indicator -->
+          <div id="selected-zones-indicator" style="margin: 5px 0; font-size: 12px; font-weight: bold; color: #eccc68; background: #222; padding: 4px 10px; border-radius: 4px; border: 1px solid #444; text-align: center; width: 90%;">
+            🎯 A: <span id="indicator-attack" style="color: #ff4757;">None</span> | 🛡️ D: <span id="indicator-defend" style="color: #2ed573;">None</span>
+          </div>
+
+          <!-- Execute Turn Action Button -->
+          <button id="btn-end-turn" class="btn-primary" disabled style="margin-top: 10px; width: 100%; max-width: 200px; opacity: 0.5; cursor: not-allowed; background-color: #eccc68; color: #000; padding: 8px;">
+            EXECUTE TURN ⚔️
+          </button>
+        </div>
+
+        <!-- RIGHT COLUMN: Enemy Profile & HP -->
         <div class="fighter-card enemy-side">
           <h3>Enemy</h3>
           <img id="arena-enemy-avatar" src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22 x=%2215%22>❓</text></svg>" alt="Enemy">
           <div id="arena-enemy-name" class="fighter-name">Choose Opponent</div>
-          
           <div class="hp-bar-container">
             <div id="enemy-hp-bar" class="hp-bar"></div>
           </div>
           <div id="enemy-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
         </div>
+
       </div>
 
+      <!-- Enemy Grid Selector (Shows before battle starts) -->
       <div class="enemy-selection">
         <h4>Select Your Target:</h4>
         <div class="enemy-grid"></div>
       </div>
 
+      <!-- Battle Logs Layout Block -->
       <div id="battle-log" class="battle-log">
         <div class="log-message log-system">⚔️ Choose an opponent and press FIGHT! to start...</div>
       </div>
 
-      <div id="combat-actions" class="combat-actions hidden">
-        <button id="btn-attack" style="background-color: #ff4757;">Attack ⚔️</button>
-        <button id="btn-defend" style="background-color: #2ed573;">Defend 🛡️</button>
-      </div>
-
+      <!-- Main Action Buttons Control Wrapper -->
       <div class="battle-actions">
         <button id="btn-fight-now" class="btn-primary" disabled style="margin-top: 15px; opacity: 0.5; cursor: not-allowed;">FIGHT! 👊</button>
         <button class="btn-back btn-battle-back" style="background-color: #555; margin-top: 10px; width: 100%;">Back to Menu</button>

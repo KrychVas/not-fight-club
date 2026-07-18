@@ -19,6 +19,7 @@ header {
   margin-bottom: 30px;
 }
 
+/* ОСНОВНИЙ КОНТЕЙНЕР: Адаптується під тип екрану */
 #app-container {
   width: 100%;
   max-width: 600px;
@@ -28,6 +29,12 @@ header {
   padding: 30px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
   text-align: center;
+  transition: max-width 0.3s ease;
+}
+
+/* Автоматично розширюємо контейнер до 950px, коли відкритий екран бою */
+#app-container:has(#screen-battle:not(.hidden)) {
+  max-width: 950px;
 }
 
 h2 {
@@ -104,31 +111,14 @@ label {
   background-color: #eb4d4b !important;
 }
 
+/* --- АВАТАРИ ТА ПРОФІЛІ --- */
 .character-profile img,
-.avatar-option {
+.avatar-option,
+#arena-player-avatar,
+#arena-enemy-avatar {
   image-rendering: pixelated; 
   image-rendering: crisp-edges; 
-  
-
   object-fit: contain; 
-}
-
-#char-current-avatar {
-  width: 120px;
-  height: 120px;
-  display: block;
-  margin: 0 auto 15px auto;
-}
-
-.avatar-grid img {
-  width: 64px;
-  height: 64px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.avatar-grid img:hover {
-  transform: scale(1.1);
 }
 
 #char-current-avatar {
@@ -136,8 +126,6 @@ label {
   height: 110px !important;
   object-fit: contain;          
   object-position: bottom center; 
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
   display: block;
   margin: 0 auto 15px auto;
   filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.5));
@@ -153,10 +141,7 @@ label {
 .avatar-option {
   width: 56px !important;        
   height: 56px !important;
-  object-fit: contain;
   object-position: bottom center; 
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
   cursor: pointer;
   border: 2px solid transparent;
   border-radius: 6px;
@@ -175,7 +160,42 @@ label {
   box-shadow: 0 0 10px rgba(255, 62, 62, 0.3);
 }
 
-/* Бойовий інтерфейс: ХП та Лог */
+/* --- СІТКА БОЮ (3 КОЛОНКИ) --- */
+.arena-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 15px;
+  width: 100%;
+  margin: 15px 0;
+}
+
+.fighter-card {
+  flex: 1;
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.fighter-card img {
+  width: 100px;
+  height: 100px;
+  margin: 10px 0;
+}
+
+.fighter-name {
+  font-weight: bold;
+  font-size: 16px;
+  color: #eccc68;
+  margin-bottom: 5px;
+}
+
+/* ХП БАРИ */
 .hp-bar-container {
   width: 100%;
   background-color: #444;
@@ -187,24 +207,82 @@ label {
 }
 
 .hp-bar {
-  width: 100%; /* Починаємо з 100% */
+  width: 100%;
   height: 100%;
-  background-color: #2ed573; /* Зелений колір здоров'я */
+  background-color: #2ed573;
   transition: width 0.3s ease-in-out, background-color 0.3s ease;
 }
 
-/* Коли залишається мало ХП, міняємо колір у JS */
 .hp-bar.warning { background-color: #ffa502; }
 .hp-bar.danger { background-color: #ff4757; }
 
+/* ЦЕНТРАЛЬНИЙ БЛОК ВИБОРУ ЗОН */
+.combat-actions {
+  flex: 1.4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.zones-columns-wrapper {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+  justify-content: center;
+}
+
+.zone-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+/* БАЗОВІ БОЙОВІ КНОПКИ */
+.btn-zone-attack, .btn-zone-defend {
+  background-color: #3a3a3a !important;
+  color: #ffffff !important;
+  border: 2px solid #555555 !important;
+  padding: 8px 10px !important;
+  font-size: 14px !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100% !important;
+  text-align: center;
+}
+
+.btn-zone-attack:hover, .btn-zone-defend:hover {
+  background-color: #4a4a4a !important;
+  border-color: #777777 !important;
+}
+
+/* КОЛЬОРИ ОБРАНИХ ЗОН */
+.btn-zone-attack.selected-attack {
+  background-color: #ff4757 !important;
+  border-color: #ff6b81 !important;
+  color: #ffffff !important;
+}
+
+.btn-zone-defend.selected-defend {
+  background-color: #2ed573 !important;
+  border-color: #7bed9f !important;
+  color: #ffffff !important;
+}
+
+/* --- ЛОГ ТА ІНШІ ЕЛЕМЕНТИ БОЮ --- */
 .battle-log {
   width: 100%;
   max-height: 120px;
-  min-height: 80px;
+  min-height: 85px;
   background-color: #1e1e1e;
   border: 1px solid #444;
   border-radius: 6px;
-  margin-top: 20px;
+  margin-top: 15px;
   padding: 10px;
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
@@ -221,10 +299,31 @@ label {
 .log-enemy { color: #ff4757; }
 .log-system { color: #eccc68; font-weight: bold; }
 
-/* Приховуємо бойові кнопки, поки бій не почався */
-.combat-actions {
+.enemy-selection {
+  margin-top: 15px;
+}
+
+.enemy-grid {
   display: flex;
   justify-content: center;
   gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.enemy-option {
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  transition: transform 0.2s;
+}
+
+.enemy-option:hover { transform: scale(1.1); }
+.enemy-option.selected { border-color: #eccc68; }
+
+.battle-actions {
+  width: 100%;
   margin-top: 15px;
 }
