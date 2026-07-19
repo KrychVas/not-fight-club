@@ -112,6 +112,13 @@ function setupEventListeners() {
     }
   });
 
+  document.getElementById('btn-reset-game').addEventListener('click', () => {
+    if (confirm("Are you sure you want to reset all progress?")) {
+      localStorage.clear();
+      window.location.reload();
+    }
+  });
+
   document.querySelector('.btn-settings-back').addEventListener('click', () => showScreen('screen-home'));
 
   // --- ЕКРАН БОЮ ---
@@ -119,7 +126,7 @@ function setupEventListeners() {
   const btnFightNow = document.getElementById('btn-fight-now');
   const btnBattleBack = document.querySelector('.btn-battle-back');
   const btnEndTurn = document.getElementById('btn-end-turn');
-  const combatActions = document.getElementById('combat-actions');
+  let combatActions = document.getElementById('combat-actions');
   const enemySelectionBlock = document.querySelector('.enemy-selection');
 
   btnStartBattle.addEventListener('click', () => {
@@ -237,6 +244,117 @@ function setupEventListeners() {
 
   // Кнопка Назад з арени
   btnBattleBack.addEventListener('click', () => {
+    // ВІДНОВЛЕННЯ 3 КОЛОНОК АРЕНИ: якщо там висить Victory банер переможця, відновлюємо дефолтний каркас картки бійців
+    const arenaContainer = document.querySelector('.arena-container');
+    if (arenaContainer && arenaContainer.querySelector('.victory-screen-wrapper')) {
+      arenaContainer.innerHTML = `
+        <div class="fighter-card player-side">
+          <h3>Your Fighter</h3>
+          <img id="arena-player-avatar" src="${gameState.playerAvatar || 'assets/avatars/ren.gif'}" alt="Player">
+          <div id="arena-player-name" class="fighter-name">${gameState.playerName}</div>
+          <div class="hp-bar-container"><div id="player-hp-bar" class="hp-bar"></div></div>
+          <div id="player-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
+        </div>
+        <div id="combat-actions" class="combat-actions hidden"></div>
+        <div class="fighter-card enemy-side">
+          <h3>Enemy</h3>
+          <img id="arena-enemy-avatar" src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22 x=%2215%22>❓</text></svg>" alt="Enemy">
+          <div id="arena-enemy-name" class="fighter-name">Choose Opponent</div>
+          <div class="hp-bar-container"><div id="enemy-hp-bar" class="hp-bar"></div></div>
+          <div id="enemy-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
+        </div>
+      `;
+      combatActions = document.getElementById('combat-actions');
+    }
+
+    // ВІДНОВЛЕННЯ ВЕРСТКИ КНОПОК: Повертаємо оригінальні кнопки на місце, якщо замість них був екран переможця
+    if (combatActions) {
+      combatActions.innerHTML = `
+        <h4>Choose 1 attack and 2 defence zones</h4>
+        <div class="zones-columns-wrapper">
+          <!-- Attack Column -->
+          <div class="zone-column">
+            <span style="color: #ff4757; font-size: 12px; font-weight: bold; margin-bottom: 5px;">⚡ ATTACK</span>
+            <button type="button" class="btn-zone-attack" data-zone="Head">Head 🪖</button>
+            <button type="button" class="btn-zone-attack" data-zone="Neck">Neck 🎯</button>
+            <button type="button" class="btn-zone-attack" data-zone="Body">Body 🥋</button>
+            <button type="button" class="btn-zone-attack" data-zone="Belly">Belly 🔥</button>
+            <button type="button" class="btn-zone-attack" data-zone="Legs">Legs 🥾</button>
+          </div>
+          <!-- Vertical Separator Line -->
+          <div class="zone-divider" style="width: 1px; background: #444; align-self: stretch;"></div>
+          <!-- Defend Column -->
+          <div class="zone-column">
+            <span style="color: #2ed573; font-size: 12px; font-weight: bold; margin-bottom: 5px;">🛡️ DEFEND</span>
+            <button type="button" class="btn-zone-defend" data-zone="Head">Head 🪖</button>
+            <button type="button" class="btn-zone-defend" data-zone="Neck">Neck 🎯</button>
+            <button type="button" class="btn-zone-defend" data-zone="Body">Body 🥋</button>
+            <button type="button" class="btn-zone-defend" data-zone="Belly">Belly 🔥</button>
+            <button type="button" class="btn-zone-defend" data-zone="Legs">Legs 🥾</button>
+          </div>
+        </div>
+        <!-- Live Selected Zones Dynamic Indicator -->
+        <div id="selected-zones-indicator" style="margin: 5px 0; font-size: 12px; font-weight: bold; color: #eccc68; background: #222; padding: 4px 10px; border-radius: 4px; border: 1px solid #444; text-align: center; width: 90%;">
+          🎯 A: <span id="indicator-attack" style="color: #ff4757;">None</span> | 🛡️ D: <span id="indicator-defend" style="color: #2ed573;">None</span>
+        </div>
+        <!-- Execute Turn Action Button -->
+        <button id="btn-end-turn" class="btn-primary" disabled style="margin-top: 10px; width: 100%; max-width: 200px; opacity: 0.5; cursor: not-allowed; background-color: #eccc68; color: #000; padding: 8px;">
+          EXECUTE TURN ⚔️
+        </button>
+      `;
+
+      // Наново вішаємо кліки на свіжі кнопки атаки
+      document.querySelectorAll('.btn-zone-attack').forEach(button => {
+        button.addEventListener('click', () => {
+          const zone = button.getAttribute('data-zone');
+          if (combatState.selectedAttackZone === zone) {
+            combatState.selectedAttackZone = '';
+            button.classList.remove('selected-attack');
+          } else {
+            document.querySelectorAll('.btn-zone-attack').forEach(btn => btn.classList.remove('selected-attack'));
+            combatState.selectedAttackZone = zone;
+            button.classList.add('selected-attack');
+          }
+          checkTurnReadiness();
+        });
+      });
+
+      // Наново вішаємо кліки на свіжі кнопки захисту
+      document.querySelectorAll('.btn-zone-defend').forEach(button => {
+        button.addEventListener('click', () => {
+          const zone = button.getAttribute('data-zone');
+          const idx = combatState.selectedDefendZones.indexOf(zone);
+          if (idx > -1) {
+            combatState.selectedDefendZones.splice(idx, 1);
+            button.classList.remove('selected-defend');
+          } else {
+            if (combatState.selectedDefendZones.length >= 2) return;
+            combatState.selectedDefendZones.push(zone);
+            button.classList.add('selected-defend');
+          }
+          checkTurnReadiness();
+        });
+      });
+
+      // Наново пов'язуємо кнопку виконання ходу
+      const newBtnEndTurn = document.getElementById('btn-end-turn');
+      if (newBtnEndTurn) {
+        newBtnEndTurn.addEventListener('click', () => {
+          executeCombatTurn((isWin) => {
+            combatActions.classList.add('hidden');
+            enemySelectionBlock.classList.remove('hidden');
+            btnBattleBack.style.display = 'block';
+            btnBattleBack.textContent = 'Return to Menu';
+            
+            updateState({ wins: gameState.wins + (isWin ? 1 : 0), losses: gameState.losses + (isWin ? 0 : 1) });
+            updateUI();
+          });
+          updateZonesIndicator();
+        });
+      }
+    }
+
+    // Код завершення роботи кнопки:
     enemySelectionBlock.classList.remove('hidden');
     combatActions.classList.add('hidden');
     btnFightNow.style.display = 'block';

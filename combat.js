@@ -1,6 +1,5 @@
 import { gameState, updateState } from './state.js';
 
-// Унікальні профілі супротивників з ТЗ
 export const enemyProfiles = {
   'Spider':  { baseDamage: 12, attacksCount: 2, defendsCount: 1 },
   'Troll':   { baseDamage: 25, attacksCount: 1, defendsCount: 3 },
@@ -13,7 +12,6 @@ export const enemyProfiles = {
   'Ryuken':  { baseDamage: 22, attacksCount: 1, defendsCount: 2 }
 };
 
-// Стан поточного бою
 export let combatState = {
   playerHP: 100,
   enemyHP: 100,
@@ -22,7 +20,6 @@ export let combatState = {
   selectedDefendZones: []
 };
 
-// Функція для додавання записів у лог бою
 export function logMessage(text, type = 'system') {
   const battleLog = document.getElementById('battle-log');
   if (!battleLog) return;
@@ -33,7 +30,6 @@ export function logMessage(text, type = 'system') {
   battleLog.scrollTop = battleLog.scrollHeight;
 }
 
-// Функція оновлення смужок HP на екрані
 export function updateHPBars() {
   const pBar = document.getElementById('player-hp-bar');
   const pText = document.getElementById('player-hp-text');
@@ -57,7 +53,6 @@ export function updateHPBars() {
   }
 }
 
-// Перевірка: якщо вибрано 1 атаку та 2 захисти — вмикаємо кнопку ходу
 export function validateTurnReadiness() {
   const btnEndTurn = document.getElementById('btn-end-turn');
   if (!btnEndTurn) return;
@@ -73,7 +68,6 @@ export function validateTurnReadiness() {
   }
 }
 
-// Отримання випадкових зон для ШІ (без повторів за один хід)
 function getRandomZones(count) {
   const zones = ['Head', 'Neck', 'Body', 'Belly', 'Legs'];
   const result = [];
@@ -85,13 +79,31 @@ function getRandomZones(count) {
   return result;
 }
 
-// Обробка одного ходу (Симуляція зіткнення)
+// АНІМАЦІЯ УРОНУ: Зміна статичної картинки на агресивну
+function triggerHitAnimation(isPlayer, baseAvatarPath) {
+  const imgElement = document.getElementById(isPlayer ? 'arena-player-avatar' : 'arena-enemy-avatar');
+  if (!imgElement) return;
+
+  const dotIdx = baseAvatarPath.lastIndexOf('.');
+  const basePath = baseAvatarPath.substring(0, dotIdx);
+  
+  imgElement.src = `${basePath}3.png`; 
+
+  setTimeout(() => {
+    imgElement.src = baseAvatarPath;
+  }, 1200);
+}
+
 export function executeCombatTurn(onBattleEndCallback) {
   const profile = enemyProfiles[combatState.currentEnemyName] || { baseDamage: 15, attacksCount: 1, defendsCount: 2 };
   const playerBaseDmg = 15;
 
   const enemyAttacks = getRandomZones(profile.attacksCount);
   const enemyDefends = getRandomZones(profile.defendsCount);
+
+  // Зберігаємо базові шляхи до поточних бойових аватарок
+  const playerAvatarBase = gameState.playerAvatar || 'assets/avatars/ren.gif';
+  const enemyAvatarBase = `assets/avatars/${combatState.currentEnemyName.toLowerCase()}.gif`;
 
   // 1. Атака Гравця
   const isPlayerCrit = Math.random() < 0.15;
@@ -108,6 +120,8 @@ export function executeCombatTurn(onBattleEndCallback) {
     }
     combatState.enemyHP = Math.max(0, combatState.enemyHP - damage);
     logMessage(`💥 ${gameState.playerName} hits ${combatState.currentEnemyName} in the ${combatState.selectedAttackZone} for ${damage} HP! ${critText}`, 'player');
+    
+    triggerHitAnimation(false, enemyAvatarBase);
   }
 
   // 2. Атаки Ворога
@@ -126,12 +140,14 @@ export function executeCombatTurn(onBattleEndCallback) {
       }
       combatState.playerHP = Math.max(0, combatState.playerHP - damage);
       logMessage(`💥 ${combatState.currentEnemyName} hits ${gameState.playerName} in the ${attackZone} for ${damage} HP! ${critText}`, 'enemy');
+      
+      triggerHitAnimation(true, playerAvatarBase);
     }
   });
 
   updateHPBars();
 
-  // Очищення вибору для наступного ходу
+  // Очищення вибору зон на кнопках
   combatState.selectedAttackZone = '';
   combatState.selectedDefendZones = [];
   document.querySelectorAll('.btn-zone-attack, .btn-zone-defend').forEach(btn => {
@@ -143,11 +159,53 @@ export function executeCombatTurn(onBattleEndCallback) {
   if (combatState.playerHP <= 0 && combatState.enemyHP <= 0) {
     logMessage(`🤝 DRAW! Both fighters knocked each other out!`, 'system');
     onBattleEndCallback(false);
-  } else if (combatState.enemyHP <= 0) {
+  } 
+  else if (combatState.enemyHP <= 0) {
     logMessage(`🏆 VICTORY! ${gameState.playerName} defeated ${combatState.currentEnemyName}!`, 'system');
+    
+    // Очищуємо ім'я файлу від цифр на кшталт "ren1.png" чи ".gif", щоб отримати чисте "ren_plane.png"
+    let baseName = 'ren';
+    const filename = playerAvatarBase.split('/').pop(); // отримаємо наприклад 'ren1.png'
+    const match = filename.match(/^([a-zA-Z]+)/); // витягнемо суто літери 'ren'
+    if (match && match[1]) {
+      baseName = match[1].toLowerCase();
+    }
+    const planeAvatar = `assets/avatars/${baseName}_plane.png`;
+
+    // Замінюємо `.arena-container` великою тріумфальною панорамою гравця
+    const arenaContainer = document.querySelector('.arena-container');
+    if (arenaContainer) {
+      arenaContainer.innerHTML = `
+        <div class="victory-screen-wrapper" style="width: 100%; text-align: center; padding: 20px; background: rgba(46, 213, 115, 0.1); border: 2px solid #2ed573; border-radius: 8px; animation: fadeIn 0.3s ease;">
+          <h2 style="color: #2ed573; font-size: 28px; font-weight: bold; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase;"> WINNER: ${gameState.playerName} 🏆 </h2>
+          <div style="width: 100%; overflow: hidden; border-radius: 6px; border: 1px solid #444; background: #111; padding: 15px 0; display: flex; justify-content: center;">
+            <img src="${planeAvatar}" style="max-width: 100%; height: auto; image-rendering: pixelated; object-fit: contain;" alt="Victory Animation">
+          </div>
+        </div>
+      `;
+    }
+    
     onBattleEndCallback(true);
-  } else if (combatState.playerHP <= 0) {
+  } 
+  else if (combatState.playerHP <= 0) {
     logMessage(`💀 DEFEATED! ${combatState.currentEnemyName} won this battle.`, 'system');
+    
+    const enemyNameLower = combatState.currentEnemyName.toLowerCase();
+    const planeAvatar = `assets/avatars/${enemyNameLower}_plane.png`;
+
+    // Замінюємо `.arena-container` великою тріумфальною панорамою бота
+    const arenaContainer = document.querySelector('.arena-container');
+    if (arenaContainer) {
+      arenaContainer.innerHTML = `
+        <div class="victory-screen-wrapper" style="width: 100%; text-align: center; padding: 20px; background: rgba(255, 71, 87, 0.1); border: 2px solid #ff4757; border-radius: 8px; animation: fadeIn 0.3s ease;">
+          <h2 style="color: #ff4757; font-size: 28px; font-weight: bold; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase;"> WINNER: ${combatState.currentEnemyName} 💀 </h2>
+          <div style="width: 100%; overflow: hidden; border-radius: 6px; border: 1px solid #444; background: #111; padding: 15px 0; display: flex; justify-content: center;">
+            <img src="${planeAvatar}" style="max-width: 100%; height: auto; image-rendering: pixelated; object-fit: contain;" alt="Victory Animation">
+          </div>
+        </div>
+      `;
+    }
+
     onBattleEndCallback(false);
   }
 }
