@@ -83,9 +83,9 @@
       <button class="btn-back btn-enemy-select-back" style="background-color: #555; margin-top: 10px; width: 100%;">Back to Menu</button>
     </section>
 
-    <!-- SCREEN 3: CHARACTER CARD -->
+<!-- SCREEN 3: CHARACTER CARD -->
     <section id="screen-character" class="screen hidden">
-      <h2>Character Card</h2>
+      <h2>Character Selection</h2>
 
       <!-- SELECT FIGHTER AT THE TOP -->
       <div class="avatar-selection" style="margin-bottom: 15px;">
@@ -95,32 +95,35 @@
         </div>
       </div>
 
-      <!-- PROFILE DISPLAY -->
-      <div class="character-profile" style="text-align: center; margin-bottom: 15px;">
-        <img id="char-current-avatar" src="assets/avatars/ren.gif" alt="Current Avatar" style="width: 80px; height: 80px; object-fit: contain;">
-        <h3 id="char-player-name" style="margin-top: 5px;">Fighter</h3>
-        <p id="char-player-bio" style="font-size: 12px; color: #aaa; margin: 4px 0; font-style: italic;"></p>
-        <p class="stats" style="font-size: 12px; color: #888;">Wins: <span id="char-wins">0</span> | Losses: <span id="char-losses">0</span></p>
-        
-        <div class="player-stats-summary" style="display: flex; justify-content: center; gap: 15px; margin-top: 6px; font-weight: bold; font-size: 14px;">
-          <span style="color: #ff4757;">⚔️ Attack: <span id="char-stat-dmg">15</span></span>
-          <span style="color: #2ed573;">❤️ Max HP: <span id="char-stat-hp">100</span></span>
-        </div>
-      </div>
-
-      <!-- ARTIFACTS & EQUIPMENT -->
-      <div class="artifacts-container">
-        <h4 style="color: #eccc68; margin-bottom: 5px; text-align: center;">Equipped Items</h4>
-        <div class="equipped-slots-grid">
-          <div class="artifact-slot" data-slot="helmet" title="Helmet Slot"><span>🪖 Helm</span></div>
-          <div class="artifact-slot" data-slot="weapon" title="Weapon Slot"><span>⚔️ Weapon</span></div>
-          <div class="artifact-slot" data-slot="armor" title="Armor Slot"><span>🥋 Armor</span></div>
-          <div class="artifact-slot" data-slot="boots" title="Boots Slot"><span>🥾 Boots</span></div>
-          <div class="artifact-slot" data-slot="ring" title="Ring Slot"><span>✨ Ring</span></div>
+      <!-- SELECTED HERO PREVIEW (Початково приховано display: none) -->
+      <div id="selected-player-preview" style="display: none; margin-bottom: 15px;">
+        <!-- PROFILE DISPLAY -->
+        <div class="character-profile" style="text-align: center; margin-bottom: 15px;">
+          <img id="char-current-avatar" src="assets/avatars/ren.gif" alt="Current Avatar" style="width: 80px; height: 80px; object-fit: contain;">
+          <h3 id="char-player-name" style="margin-top: 5px;">Fighter</h3>
+          <p id="char-player-bio" style="font-size: 12px; color: #aaa; margin: 4px 0; font-style: italic;"></p>
+          <p class="stats" style="font-size: 12px; color: #888;">Wins: <span id="char-wins">0</span> | Losses: <span id="char-losses">0</span></p>
+          
+          <div class="player-stats-summary" style="display: flex; justify-content: center; gap: 15px; margin-top: 6px; font-weight: bold; font-size: 14px;">
+            <span style="color: #ff4757;">⚔️ Attack: <span id="char-stat-dmg">15</span></span>
+            <span style="color: #2ed573;">❤️ Max HP: <span id="char-stat-hp">100</span></span>
+          </div>
         </div>
 
-        <h4 style="color: #aaa; margin-top: 15px; margin-bottom: 5px; text-align: center;">Inventory</h4>
-        <div id="inventory-grid" class="inventory-grid"></div>
+        <!-- ARTIFACTS & EQUIPMENT -->
+        <div class="artifacts-container">
+          <h4 style="color: #eccc68; margin-bottom: 5px; text-align: center;">Equipped Items</h4>
+          <div class="equipped-slots-grid">
+            <div class="artifact-slot" data-slot="helmet" title="Helmet Slot"><span>🪖 Helm</span></div>
+            <div class="artifact-slot" data-slot="weapon" title="Weapon Slot"><span>⚔️ Weapon</span></div>
+            <div class="artifact-slot" data-slot="armor" title="Armor Slot"><span>🥋 Armor</span></div>
+            <div class="artifact-slot" data-slot="boots" title="Boots Slot"><span>🥾 Boots</span></div>
+            <div class="artifact-slot" data-slot="ring" title="Ring Slot"><span>✨ Ring</span></div>
+          </div>
+
+          <h4 style="color: #aaa; margin-top: 15px; margin-bottom: 5px; text-align: center;">Inventory</h4>
+          <div id="inventory-grid" class="inventory-grid"></div>
+        </div>
       </div>
 
       <button class="btn-back btn-character-back" style="background-color: #555; margin-top: 20px;">Back to Menu</button>

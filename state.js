@@ -5,7 +5,7 @@ const STORAGE_KEY = 'not-fight-club-state';
 // Початковий стан гри
 const defaultState = {
   playerName: '',
-  playerAvatar: 'assets/avatars/ren.gif',
+  playerAvatar: null, // Початково null, щоб блок прев'ю приховувався до вибору героя
   wins: 0,
   losses: 0,
   currentScreen: 'screen-registration',

@@ -49,15 +49,19 @@ function updateUI() {
   if (dmgStatEl) dmgStatEl.textContent = 15 + bonusDamage;
 
   const currentAvatarImg = document.getElementById('char-current-avatar');
-  if (currentAvatarImg) currentAvatarImg.src = gameState.playerAvatar || 'assets/avatars/ren.gif';
+  if (currentAvatarImg && gameState.playerAvatar) {
+    currentAvatarImg.src = gameState.playerAvatar;
+  }
 
   // Відображення опису обраного героя гравця
-  const avatarName = (gameState.playerAvatar || 'ren.gif').split('/').pop().replace('.gif','');
-  const heroNameCap = avatarName.charAt(0).toUpperCase() + avatarName.slice(1);
-  const heroProfile = enemyProfiles[heroNameCap];
-  const charBioEl = document.getElementById('char-player-bio');
-  if (charBioEl && heroProfile) {
-    charBioEl.textContent = heroProfile.bio;
+  if (gameState.playerAvatar) {
+    const avatarName = gameState.playerAvatar.split('/').pop().replace('.gif','');
+    const heroNameCap = avatarName.charAt(0).toUpperCase() + avatarName.slice(1);
+    const heroProfile = enemyProfiles[heroNameCap];
+    const charBioEl = document.getElementById('char-player-bio');
+    if (charBioEl && heroProfile) {
+      charBioEl.textContent = heroProfile.bio;
+    }
   }
 
   renderPlayerAvatarPicker();
@@ -67,8 +71,19 @@ function updateUI() {
 // --- PLAYER AVATAR PICKER (CHARACTER CARD) ---
 function renderPlayerAvatarPicker() {
   const container = document.getElementById('player-avatar-grid');
+  const playerPreviewBox = document.getElementById('selected-player-preview');
+  
   if (!container) return;
   container.innerHTML = '';
+
+  // Перевірка: якщо аватар ще НЕ обрано, приховуємо нижній блок повністю (як на Другому скріншоті)
+  if (playerPreviewBox) {
+    if (!gameState.playerAvatar) {
+      playerPreviewBox.style.display = 'none';
+    } else {
+      playerPreviewBox.style.display = 'block';
+    }
+  }
 
   const allCharacters = [
     { name: 'Boss', avatar: 'assets/avatars/boss.gif' },
@@ -81,8 +96,9 @@ function renderPlayerAvatarPicker() {
   ];
 
   allCharacters.forEach(char => {
-    const isSelected = (gameState.playerAvatar || 'assets/avatars/ren.gif') === char.avatar;
+    const isSelected = gameState.playerAvatar === char.avatar;
     const card = document.createElement('div');
+    card.className = 'player-card-option';
     card.style.cssText = `background: #222; border: 2px solid ${isSelected ? '#2ed573' : '#444'}; border-radius: 6px; padding: 6px; text-align: center; cursor: pointer; transition: all 0.2s;`;
     
     card.innerHTML = `
@@ -91,8 +107,18 @@ function renderPlayerAvatarPicker() {
     `;
 
     card.addEventListener('click', () => {
+      // Підсвічуємо лише обрану картку
+      document.querySelectorAll('.player-card-option').forEach(c => c.style.borderColor = '#444');
+      card.style.borderColor = '#2ed573';
+
+      // Оновлюємо стан гравця
       updateState({ playerAvatar: char.avatar });
+      
+      // Оновлюємо UI та робимо прев'ю-блок видимим
       updateUI();
+      if (playerPreviewBox) {
+        playerPreviewBox.style.display = 'block';
+      }
     });
 
     container.appendChild(card);
@@ -176,7 +202,7 @@ function renderEnemySelection() {
   
   if (!enemyGrid) return;
   enemyGrid.innerHTML = '';
-  previewBox.style.display = 'none';
+  if (previewBox) previewBox.style.display = 'none';
   btnConfirm.disabled = true;
   btnConfirm.style.opacity = '0.5';
   btnConfirm.style.cursor = 'not-allowed';
@@ -213,7 +239,7 @@ function renderEnemySelection() {
       document.getElementById('preview-enemy-avatar').src = enemy.avatar;
       updateEnemyUI();
 
-      previewBox.style.display = 'block';
+      if (previewBox) previewBox.style.display = 'block';
       btnConfirm.disabled = false;
       btnConfirm.style.opacity = '1';
       btnConfirm.style.cursor = 'pointer';
@@ -328,6 +354,11 @@ function setupEventListeners() {
   });
 
   document.getElementById('btn-to-character').addEventListener('click', () => {
+    // При переході в екран Character: скидаємо або показуємо блок відповідно до стану
+    const playerPreviewBox = document.getElementById('selected-player-preview');
+    if (playerPreviewBox) {
+      playerPreviewBox.style.display = gameState.playerAvatar ? 'block' : 'none';
+    }
     updateUI();
     showScreen('screen-character');
   });
