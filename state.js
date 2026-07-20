@@ -1,43 +1,43 @@
-// Назва ключа для збереження в localStorage
+import { ARTIFACTS_DATABASE } from './artifacts.js';
+
 const STORAGE_KEY = 'not-fight-club-state';
 
-// Початковий (дефолтний) стан, якщо гравець зайшов уперше
+// Початковий стан гри
 const defaultState = {
   playerName: '',
-  playerAvatar: 'assets/avatars/ren.gif', // Герой за замовчуванням!
+  playerAvatar: 'assets/avatars/ren.gif',
   wins: 0,
   losses: 0,
   currentScreen: 'screen-registration',
 
-  // --- СИСТЕМА АРТЕФАКТІВ ТА ЕКОНОМІКИ ---
-  gold: 250, // Стартове золото для покупок або покращень
+  gold: 250,
   
-  // Початкові випадкові артефакти з твого скріншота у інвентарі гравця
-  artifacts: ['fc1448', 'fc1491', 'fc1862', 'fc1912', 'fc1985'], 
+  // Додаємо ВСІ артефакти з нашої бази даних в інвентар
+  artifacts: Object.keys(ARTIFACTS_DATABASE), 
   
-  // Слоти під екіпіровані на персонажа предмети
   equippedArtifacts: {
-    weapon: null,  // Слот для зброї
-    armor: null,   // Слот для нагрудника
-    helmet: null,  // Слот для шолома
-    boots: null,   // Слот для чобіт
-    ring: null     // Слот для біжутерії/магічних предметів
+    weapon: null,
+    armor: null,
+    helmet: null,
+    boots: null,
+    ring: null
   }
 };
 
-// Наш активний стан гри в пам'яті
 export let gameState = { ...defaultState };
 
-// Функція завантаження стану з localStorage
 export function loadState() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      // Мержаємо з defaultState, щоб старі сейви не ламалися при додаванні нових полів
       gameState = { ...defaultState, ...parsed };
+      // Гарантуємо, що нові артефакти з бази підтягнуться, якщо масив був застарілим
+      if (!gameState.artifacts || gameState.artifacts.length < 10) {
+        gameState.artifacts = Object.keys(ARTIFACTS_DATABASE);
+      }
     } catch (e) {
-      console.error("Помилка читання стану з localStorage:", e);
+      console.error("Error reading localStorage state:", e);
       gameState = { ...defaultState };
     }
   } else {
@@ -46,13 +46,29 @@ export function loadState() {
   return gameState;
 }
 
-// Функція збереження поточного стану в localStorage
 export function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
 }
 
-// Функція для оновлення окремих полів стану
 export function updateState(newData) {
   gameState = { ...gameState, ...newData };
   saveState();
+}
+
+// --- ФУНКЦІЯ ОБЧИСЛЕННЯ ПІДСУМКОВИХ ХАРАКТЕРИСТИК (З УРАХУВАННЯМ АРТЕФАКТІВ) ---
+export function getPlayerStats() {
+  let maxHP = 100;
+  let bonusDamage = 0;
+
+  if (gameState.equippedArtifacts) {
+    Object.values(gameState.equippedArtifacts).forEach(artifactId => {
+      if (artifactId && ARTIFACTS_DATABASE[artifactId]) {
+        const item = ARTIFACTS_DATABASE[artifactId];
+        if (item.bonusHP) maxHP += item.bonusHP;
+        if (item.bonusDamage) bonusDamage += item.bonusDamage;
+      }
+    });
+  }
+
+  return { maxHP, bonusDamage };
 }

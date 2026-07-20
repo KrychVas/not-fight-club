@@ -1,5 +1,6 @@
-import { gameState, loadState, updateState } from './state.js';
+import { gameState, loadState, updateState, getPlayerStats } from './state.js';
 import { combatState, executeCombatTurn, logMessage, updateHPBars, validateTurnReadiness } from './combat.js';
+import { ARTIFACTS_DATABASE } from './artifacts.js';
 
 function showScreen(screenId) {
   const screens = document.querySelectorAll('.screen');
@@ -35,12 +36,91 @@ function updateUI() {
   if (winsEl) winsEl.textContent = gameState.wins;
   if (lossesEl) lossesEl.textContent = gameState.losses;
 
+  // Оновлення текстових індикаторів характеристик на картці персонажа
+  const { maxHP, bonusDamage } = getPlayerStats();
+  const hpStatEl = document.getElementById('char-stat-hp');
+  const dmgStatEl = document.getElementById('char-stat-dmg');
+  if (hpStatEl) hpStatEl.textContent = maxHP;
+  if (dmgStatEl) dmgStatEl.textContent = 15 + bonusDamage;
+
   const currentAvatarImg = document.getElementById('char-current-avatar');
   if (currentAvatarImg) currentAvatarImg.src = gameState.playerAvatar || 'assets/avatars/ren1.png';
 
   document.querySelectorAll('.avatar-option').forEach(img => {
     img.getAttribute('data-avatar') === gameState.playerAvatar ? img.classList.add('selected') : img.classList.remove('selected');
   });
+
+  // Оновлюємо відображення екіпірування та інвентарю
+  renderArtifactsUI();
+}
+
+// --- ФУНКЦІОНАЛЬНІСТЬ: РЕНДЕР АРТЕФАКТІВ ---
+function renderArtifactsUI() {
+  const inventoryGrid = document.getElementById('inventory-grid');
+  if (!inventoryGrid) return;
+
+  inventoryGrid.innerHTML = '';
+
+  // 1. Оновлення 5 слотів екіпірування (Helmet, Weapon, Armor, Boots, Ring)
+  const slots = ['helmet', 'weapon', 'armor', 'boots', 'ring'];
+  slots.forEach(slotType => {
+    const slotEl = document.querySelector(`.artifact-slot[data-slot="${slotType}"]`);
+    if (!slotEl) return;
+
+    const equippedId = gameState.equippedArtifacts ? gameState.equippedArtifacts[slotType] : null;
+    const artifact = ARTIFACTS_DATABASE[equippedId];
+
+    if (artifact) {
+      slotEl.classList.add('active');
+      slotEl.innerHTML = `<img src="${artifact.icon}" alt="${artifact.name}" title="${artifact.name} (${artifact.description})">`;
+      slotEl.onclick = () => unequipArtifact(slotType);
+    } else {
+      slotEl.classList.remove('active');
+      const icons = { helmet: '🪖 Helm', weapon: '⚔️ Weapon', armor: '🥋 Armor', boots: '🥾 Boots', ring: '✨ Ring' };
+      slotEl.innerHTML = `<span>${icons[slotType]}</span>`;
+      slotEl.onclick = null;
+    }
+  });
+
+  // 2. Рендер сітки предметів в інвентарі
+  if (gameState.artifacts && Array.isArray(gameState.artifacts)) {
+    gameState.artifacts.forEach(artifactId => {
+      const artifact = ARTIFACTS_DATABASE[artifactId];
+      if (!artifact) return;
+
+      const isEquipped = gameState.equippedArtifacts && Object.values(gameState.equippedArtifacts).includes(artifactId);
+      
+      const itemEl = document.createElement('div');
+      itemEl.className = `inventory-item ${isEquipped ? 'equipped-now' : ''}`;
+      itemEl.title = `${artifact.name}\nSlot: ${artifact.slot}\n${artifact.description}`;
+      itemEl.innerHTML = `<img src="${artifact.icon}" alt="${artifact.name}">`;
+
+      if (!isEquipped) {
+        itemEl.addEventListener('click', () => equipArtifact(artifactId));
+      }
+
+      inventoryGrid.appendChild(itemEl);
+    });
+  }
+}
+
+function equipArtifact(artifactId) {
+  const artifact = ARTIFACTS_DATABASE[artifactId];
+  if (!artifact) return;
+
+  const currentEquipped = { ...(gameState.equippedArtifacts || {}) };
+  currentEquipped[artifact.slot] = artifactId;
+
+  updateState({ equippedArtifacts: currentEquipped });
+  updateUI();
+}
+
+function unequipArtifact(slotType) {
+  const currentEquipped = { ...(gameState.equippedArtifacts || {}) };
+  currentEquipped[slotType] = null;
+
+  updateState({ equippedArtifacts: currentEquipped });
+  updateUI();
 }
 
 // Функція оновлення текстового індикатора вибору зон на екрані
@@ -58,7 +138,7 @@ function updateZonesIndicator() {
   }
 }
 
-// Обертка для перевірки готовності ходу з оновленням табла
+// Обгортка для перевірки готовності ходу з оновленням табла
 function checkTurnReadiness() {
   validateTurnReadiness();
   updateZonesIndicator();
@@ -103,13 +183,6 @@ function setupEventListeners() {
     updateState({ playerName: newName });
     updateUI();
     alert("Changes saved successfully! 💾");
-  });
-
-  document.getElementById('btn-reset-game').addEventListener('click', () => {
-    if (confirm("Are you sure you want to reset all progress?")) {
-      localStorage.clear();
-      window.location.reload();
-    }
   });
 
   document.getElementById('btn-reset-game').addEventListener('click', () => {
@@ -168,7 +241,7 @@ function setupEventListeners() {
           btnFightNow.style.opacity = '1';
           btnFightNow.style.cursor = 'pointer';
         });
-          enemyGrid.appendChild(img);
+        enemyGrid.appendChild(img);
       });
     }
     showScreen('screen-battle');
@@ -176,14 +249,15 @@ function setupEventListeners() {
 
   // Натискання кнопки FIGHT!
   btnFightNow.addEventListener('click', () => {
+    const { maxHP } = getPlayerStats();
     combatState.currentEnemyName = document.getElementById('arena-enemy-name').textContent;
-    combatState.playerHP = 100;
+    combatState.playerHP = maxHP; // Встановлюємо динамічне здоров'я відповідно до екіпірованих предметів
     combatState.enemyHP = 100;
     updateHPBars();
     updateZonesIndicator();
 
     document.getElementById('battle-log').innerHTML = '';
-    logMessage(`⚔️ Battle started! ${gameState.playerName} vs ${combatState.currentEnemyName}!`, 'system');
+    logMessage(`⚔️ Battle started! ${gameState.playerName} (${maxHP} HP) vs ${combatState.currentEnemyName}!`, 'system');
 
     enemySelectionBlock.classList.add('hidden');
     combatActions.classList.remove('hidden');
@@ -247,13 +321,14 @@ function setupEventListeners() {
     // ВІДНОВЛЕННЯ 3 КОЛОНОК АРЕНИ: якщо там висить Victory банер переможця, відновлюємо дефолтний каркас картки бійців
     const arenaContainer = document.querySelector('.arena-container');
     if (arenaContainer && arenaContainer.querySelector('.victory-screen-wrapper')) {
+      const { maxHP } = getPlayerStats();
       arenaContainer.innerHTML = `
         <div class="fighter-card player-side">
           <h3>Your Fighter</h3>
           <img id="arena-player-avatar" src="${gameState.playerAvatar || 'assets/avatars/ren.gif'}" alt="Player">
           <div id="arena-player-name" class="fighter-name">${gameState.playerName}</div>
           <div class="hp-bar-container"><div id="player-hp-bar" class="hp-bar"></div></div>
-          <div id="player-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
+          <div id="player-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">${maxHP} / ${maxHP}</div>
         </div>
         <div id="combat-actions" class="combat-actions hidden"></div>
         <div class="fighter-card enemy-side">

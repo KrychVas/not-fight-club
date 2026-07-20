@@ -1,4 +1,4 @@
-import { gameState, updateState } from './state.js';
+import { gameState, updateState, getPlayerStats } from './state.js';
 
 export const enemyProfiles = {
   'Spider':  { baseDamage: 12, attacksCount: 2, defendsCount: 1 },
@@ -31,25 +31,28 @@ export function logMessage(text, type = 'system') {
 }
 
 export function updateHPBars() {
+  const { maxHP } = getPlayerStats();
   const pBar = document.getElementById('player-hp-bar');
   const pText = document.getElementById('player-hp-text');
   const eBar = document.getElementById('enemy-hp-bar');
   const eText = document.getElementById('enemy-hp-text');
 
   if (pBar && pText) {
-    pBar.style.width = `${combatState.playerHP}%`;
-    pText.textContent = `${combatState.playerHP} / 100`;
+    const playerHpPercent = Math.max(0, Math.min(100, (combatState.playerHP / maxHP) * 100));
+    pBar.style.width = `${playerHpPercent}%`;
+    pText.textContent = `${combatState.playerHP} / ${maxHP}`;
     pBar.className = 'hp-bar';
-    if (combatState.playerHP <= 20) pBar.classList.add('danger');
-    else if (combatState.playerHP <= 50) pBar.classList.add('warning');
+    if (playerHpPercent <= 20) pBar.classList.add('danger');
+    else if (playerHpPercent <= 50) pBar.classList.add('warning');
   }
 
   if (eBar && eText) {
-    eBar.style.width = `${combatState.enemyHP}%`;
+    const enemyHpPercent = Math.max(0, Math.min(100, combatState.enemyHP));
+    eBar.style.width = `${enemyHpPercent}%`;
     eText.textContent = `${combatState.enemyHP} / 100`;
     eBar.className = 'hp-bar';
-    if (combatState.enemyHP <= 20) eBar.classList.add('danger');
-    else if (combatState.enemyHP <= 50) eBar.classList.add('warning');
+    if (enemyHpPercent <= 20) eBar.classList.add('danger');
+    else if (enemyHpPercent <= 50) eBar.classList.add('warning');
   }
 }
 
@@ -96,7 +99,10 @@ function triggerHitAnimation(isPlayer, baseAvatarPath) {
 
 export function executeCombatTurn(onBattleEndCallback) {
   const profile = enemyProfiles[combatState.currentEnemyName] || { baseDamage: 15, attacksCount: 1, defendsCount: 2 };
-  const playerBaseDmg = 15;
+  
+  // Враховуємо додатковий урон від екіпірованих предметів
+  const { bonusDamage } = getPlayerStats();
+  const playerBaseDmg = 15 + bonusDamage;
 
   const enemyAttacks = getRandomZones(profile.attacksCount);
   const enemyDefends = getRandomZones(profile.defendsCount);
