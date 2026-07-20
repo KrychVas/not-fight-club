@@ -28,10 +28,36 @@
     <section id="screen-home" class="screen hidden">
       <h2>Welcome, <span id="home-player-name">Fighter</span>!</h2>
       <div class="menu-buttons">
-        <button id="btn-start-battle" class="btn-primary">Start Battle ⚔️</button>
+        <button id="btn-start-battle" class="btn-primary">Select Opponent ⚔️</button>
         <button id="btn-to-character">My Character 🛡️</button>
         <button id="btn-to-settings">Settings ⚙️</button>
       </div>
+    </section>
+
+    <!-- SCREEN: ENEMY SELECTION & PREP -->
+    <section id="screen-enemy-select" class="screen hidden">
+      <h2>Select Your Opponent</h2>
+      <p style="color: #aaa; font-size: 13px; margin-bottom: 15px;">Choose who you want to challenge in the ring:</p>
+
+      <!-- Grid of enemy cards -->
+      <div id="enemy-select-grid" class="enemy-select-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px;">
+        <!-- Dynamic content via app.js -->
+      </div>
+
+      <!-- Enemy Stats Preview Card -->
+      <div id="selected-enemy-preview" style="background: #1e1e1e; border: 1px solid #444; border-radius: 8px; padding: 15px; margin-bottom: 20px; display: none;">
+        <h3 id="preview-enemy-name" style="color: #ff4757; margin-bottom: 8px;">Enemy Name</h3>
+        <div style="display: flex; justify-content: space-around; font-size: 13px; color: #ccc;">
+          <span>⚔️ Base Dmg: <strong id="preview-enemy-dmg" style="color: #ff4757;">0</strong></span>
+          <span>⚡ Attacks: <strong id="preview-enemy-attacks" style="color: #eccc68;">0</strong></span>
+          <span>🛡️ Defends: <strong id="preview-enemy-defends" style="color: #2ed573;">0</strong></span>
+        </div>
+      </div>
+
+      <button id="btn-confirm-fight" class="btn-primary" disabled style="opacity: 0.5; cursor: not-allowed; width: 100%;">
+        ENTER ARENA 👊
+      </button>
+      <button class="btn-back btn-enemy-select-back" style="background-color: #555; margin-top: 10px; width: 100%;">Back to Menu</button>
     </section>
 
     <!-- SCREEN 3: CHARACTER CARD -->
@@ -43,7 +69,7 @@
         <h3 id="char-player-name">Fighter</h3>
         <p class="stats">Wins: <span id="char-wins">0</span> | Losses: <span id="char-losses">0</span></p>
         
-        <!-- ДИНАМІЧНИЙ БЛОК ХАРАКТЕРИСТИК (АТАКА ТА HP ВІД АРТЕФАКТІВ) -->
+        <!-- STATS SUMMARY -->
         <div class="player-stats-summary" style="display: flex; justify-content: center; gap: 15px; margin-top: 8px; font-weight: bold; font-size: 14px;">
           <span style="color: #ff4757;">⚔️ Attack: <span id="char-stat-dmg">15</span></span>
           <span style="color: #2ed573;">❤️ Max HP: <span id="char-stat-hp">100</span></span>
@@ -73,7 +99,7 @@
 
         <h4 style="color: #aaa; margin-top: 15px; margin-bottom: 5px;">Inventory</h4>
         <div id="inventory-grid" class="inventory-grid">
-          <!-- Предмети згенеруються динамічно через app.js -->
+          <!-- Inventory items -->
         </div>
       </div>
 
@@ -109,9 +135,7 @@
     <section id="screen-battle" class="screen hidden">
       <h2>Battle Arena</h2>
       
-      <!-- ARENA LAYOUT WITH THREE COLUMNS -->
       <div class="arena-container">
-        
         <!-- LEFT COLUMN: Player Profile & HP -->
         <div class="fighter-card player-side">
           <h3>Your Fighter</h3>
@@ -123,14 +147,11 @@
           <div id="player-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
         </div>
 
-        <!-- CENTER COLUMN: Combat Actions & Zone Selection -->
-        <div id="combat-actions" class="combat-actions hidden">
+        <!-- CENTER COLUMN: Combat Actions -->
+        <div id="combat-actions" class="combat-actions">
           <h4>Choose 1 attack and 2 defence zones</h4>
           
-          <!-- Columns Wrapper -->
           <div class="zones-columns-wrapper">
-            
-            <!-- Attack Column -->
             <div class="zone-column">
               <span style="color: #ff4757; font-size: 12px; font-weight: bold; margin-bottom: 5px;">⚡ ATTACK</span>
               <button type="button" class="btn-zone-attack" data-zone="Head">Head 🪖</button>
@@ -140,10 +161,8 @@
               <button type="button" class="btn-zone-attack" data-zone="Legs">Legs 🥾</button>
             </div>
 
-            <!-- Vertical Separator Line -->
             <div class="zone-divider" style="width: 1px; background: #444; align-self: stretch;"></div>
 
-            <!-- Defend Column -->
             <div class="zone-column">
               <span style="color: #2ed573; font-size: 12px; font-weight: bold; margin-bottom: 5px;">🛡️ DEFEND</span>
               <button type="button" class="btn-zone-defend" data-zone="Head">Head 🪖</button>
@@ -154,12 +173,10 @@
             </div>
           </div>
 
-          <!-- Live Selected Zones Dynamic Indicator -->
           <div id="selected-zones-indicator" style="margin: 5px 0; font-size: 12px; font-weight: bold; color: #eccc68; background: #222; padding: 4px 10px; border-radius: 4px; border: 1px solid #444; text-align: center; width: 90%;">
             🎯 A: <span id="indicator-attack" style="color: #ff4757;">None</span> | 🛡️ D: <span id="indicator-defend" style="color: #2ed573;">None</span>
           </div>
 
-          <!-- Execute Turn Action Button -->
           <button id="btn-end-turn" class="btn-primary" disabled style="margin-top: 10px; width: 100%; max-width: 200px; opacity: 0.5; cursor: not-allowed; background-color: #eccc68; color: #000; padding: 8px;">
             EXECUTE TURN ⚔️
           </button>
@@ -169,7 +186,7 @@
         <div class="fighter-card enemy-side">
           <h3>Enemy</h3>
           <img id="arena-enemy-avatar" src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22 x=%2215%22>❓</text></svg>" alt="Enemy">
-          <div id="arena-enemy-name" class="fighter-name">Choose Opponent</div>
+          <div id="arena-enemy-name" class="fighter-name">Enemy</div>
           <div class="hp-bar-container">
             <div id="enemy-hp-bar" class="hp-bar"></div>
           </div>
@@ -178,20 +195,11 @@
 
       </div>
 
-      <!-- Enemy Grid Selector (Shows before battle starts) -->
-      <div class="enemy-selection">
-        <h4>Select Your Target:</h4>
-        <div class="enemy-grid"></div>
-      </div>
-
-      <!-- Battle Logs Layout Block -->
       <div id="battle-log" class="battle-log">
-        <div class="log-message log-system">⚔️ Choose an opponent and press FIGHT! to start...</div>
+        <div class="log-message log-system">⚔️ Battle initialized! Choose your actions...</div>
       </div>
 
-      <!-- Main Action Buttons Control Wrapper -->
       <div class="battle-actions">
-        <button id="btn-fight-now" class="btn-primary" disabled style="margin-top: 15px; opacity: 0.5; cursor: not-allowed;">FIGHT! 👊</button>
         <button class="btn-back btn-battle-back" style="background-color: #555; margin-top: 10px; width: 100%;">Back to Menu</button>
       </div>
     </section>

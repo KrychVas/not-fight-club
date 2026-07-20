@@ -1,5 +1,5 @@
 import { gameState, loadState, updateState, getPlayerStats } from './state.js';
-import { combatState, executeCombatTurn, logMessage, updateHPBars, validateTurnReadiness } from './combat.js';
+import { combatState, executeCombatTurn, logMessage, updateHPBars, validateTurnReadiness, enemyProfiles } from './combat.js';
 import { ARTIFACTS_DATABASE } from './artifacts.js';
 
 function showScreen(screenId) {
@@ -36,7 +36,6 @@ function updateUI() {
   if (winsEl) winsEl.textContent = gameState.wins;
   if (lossesEl) lossesEl.textContent = gameState.losses;
 
-  // Оновлення текстових індикаторів характеристик на картці персонажа
   const { maxHP, bonusDamage } = getPlayerStats();
   const hpStatEl = document.getElementById('char-stat-hp');
   const dmgStatEl = document.getElementById('char-stat-dmg');
@@ -44,24 +43,21 @@ function updateUI() {
   if (dmgStatEl) dmgStatEl.textContent = 15 + bonusDamage;
 
   const currentAvatarImg = document.getElementById('char-current-avatar');
-  if (currentAvatarImg) currentAvatarImg.src = gameState.playerAvatar || 'assets/avatars/ren1.png';
+  if (currentAvatarImg) currentAvatarImg.src = gameState.playerAvatar || 'assets/avatars/ren.gif';
 
   document.querySelectorAll('.avatar-option').forEach(img => {
     img.getAttribute('data-avatar') === gameState.playerAvatar ? img.classList.add('selected') : img.classList.remove('selected');
   });
 
-  // Оновлюємо відображення екіпірування та інвентарю
   renderArtifactsUI();
 }
 
-// --- ФУНКЦІОНАЛЬНІСТЬ: РЕНДЕР АРТЕФАКТІВ ---
 function renderArtifactsUI() {
   const inventoryGrid = document.getElementById('inventory-grid');
   if (!inventoryGrid) return;
 
   inventoryGrid.innerHTML = '';
 
-  // 1. Оновлення 5 слотів екіпірування (Helmet, Weapon, Armor, Boots, Ring)
   const slots = ['helmet', 'weapon', 'armor', 'boots', 'ring'];
   slots.forEach(slotType => {
     const slotEl = document.querySelector(`.artifact-slot[data-slot="${slotType}"]`);
@@ -82,7 +78,6 @@ function renderArtifactsUI() {
     }
   });
 
-  // 2. Рендер сітки предметів в інвентарі
   if (gameState.artifacts && Array.isArray(gameState.artifacts)) {
     gameState.artifacts.forEach(artifactId => {
       const artifact = ARTIFACTS_DATABASE[artifactId];
@@ -123,14 +118,67 @@ function unequipArtifact(slotType) {
   updateUI();
 }
 
-// Функція оновлення текстового індикатора вибору зон на екрані
+function renderEnemySelection() {
+  const enemyGrid = document.getElementById('enemy-select-grid');
+  const previewBox = document.getElementById('selected-enemy-preview');
+  const btnConfirm = document.getElementById('btn-confirm-fight');
+  
+  if (!enemyGrid) return;
+  enemyGrid.innerHTML = '';
+  previewBox.style.display = 'none';
+  btnConfirm.disabled = true;
+  btnConfirm.style.opacity = '0.5';
+  btnConfirm.style.cursor = 'not-allowed';
+
+  const allEnemies = [
+    { name: 'Boss', avatar: 'assets/avatars/boss.gif' },
+    { name: 'Cho', avatar: 'assets/avatars/cho.gif' },
+    { name: 'Gal', avatar: 'assets/avatars/gal.gif' },
+    { name: 'Jon', avatar: 'assets/avatars/jon.gif' },
+    { name: 'Lodman', avatar: 'assets/avatars/lodman.gif' },
+    { name: 'Ren', avatar: 'assets/avatars/ren.gif' },
+    { name: 'Ryuken', avatar: 'assets/avatars/ryuken.gif' }
+  ];
+
+  allEnemies.filter(e => e.avatar !== gameState.playerAvatar).forEach(enemy => {
+    const profile = enemyProfiles[enemy.name] || { baseDamage: 15, attacksCount: 1, defendsCount: 2 };
+
+    const card = document.createElement('div');
+    card.className = 'enemy-card-option';
+    card.style.cssText = 'background: #222; border: 2px solid #444; border-radius: 6px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s;';
+    
+    card.innerHTML = `
+      <img src="${enemy.avatar}" style="width: 60px; height: 60px; object-fit: contain; margin-bottom: 5px;" alt="${enemy.name}">
+      <div style="font-weight: bold; font-size: 14px;">${enemy.name}</div>
+    `;
+
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.enemy-card-option').forEach(c => c.style.borderColor = '#444');
+      card.style.borderColor = '#ff4757';
+
+      combatState.currentEnemyName = enemy.name;
+      
+      document.getElementById('preview-enemy-name').textContent = enemy.name;
+      document.getElementById('preview-enemy-dmg').textContent = profile.baseDamage;
+      document.getElementById('preview-enemy-attacks').textContent = profile.attacksCount;
+      document.getElementById('preview-enemy-defends').textContent = profile.defendsCount;
+      
+      previewBox.style.display = 'block';
+
+      btnConfirm.disabled = false;
+      btnConfirm.style.opacity = '1';
+      btnConfirm.style.cursor = 'pointer';
+    });
+
+    enemyGrid.appendChild(card);
+  });
+}
+
 function updateZonesIndicator() {
   const attackText = document.getElementById('indicator-attack');
   const defendText = document.getElementById('indicator-defend');
   
-  if (attackText) {
-    attackText.textContent = combatState.selectedAttackZone || 'None';
-  }
+  if (attackText) attackText.textContent = combatState.selectedAttackZone || 'None';
   if (defendText) {
     defendText.textContent = combatState.selectedDefendZones.length > 0 
       ? combatState.selectedDefendZones.join(', ') 
@@ -138,19 +186,15 @@ function updateZonesIndicator() {
   }
 }
 
-// Обгортка для перевірки готовності ходу з оновленням табла
 function checkTurnReadiness() {
   validateTurnReadiness();
   updateZonesIndicator();
 }
 
 function setupEventListeners() {
-  // --- РЕЄСТРАЦІЯ ТА НАВІГАЦІЯ ---
-  const btnRegister = document.getElementById('btn-register');
-  const regInput = document.getElementById('reg-name');
-
-  btnRegister.addEventListener('click', () => {
-    const name = regInput.value.trim();
+  // Navigation
+  document.getElementById('btn-register').addEventListener('click', () => {
+    const name = document.getElementById('reg-name').value.trim();
     if (!name) return alert("Please enter your fighter's name!");
     updateState({ playerName: name });
     updateUI();
@@ -176,7 +220,7 @@ function setupEventListeners() {
 
   document.querySelector('.btn-character-back').addEventListener('click', () => showScreen('screen-home'));
 
-  // --- НАЛАШТУВАННЯ ---
+  // Settings
   document.getElementById('btn-save-settings').addEventListener('click', () => {
     const newName = document.getElementById('settings-name').value.trim();
     if (!newName) return alert("Fighter's name cannot be empty!");
@@ -194,78 +238,36 @@ function setupEventListeners() {
 
   document.querySelector('.btn-settings-back').addEventListener('click', () => showScreen('screen-home'));
 
-  // --- ЕКРАН БОЮ ---
-  const btnStartBattle = document.getElementById('btn-start-battle');
-  const btnFightNow = document.getElementById('btn-fight-now');
-  const btnBattleBack = document.querySelector('.btn-battle-back');
-  const btnEndTurn = document.getElementById('btn-end-turn');
-  let combatActions = document.getElementById('combat-actions');
-  const enemySelectionBlock = document.querySelector('.enemy-selection');
-
-  btnStartBattle.addEventListener('click', () => {
-    document.getElementById('arena-player-avatar').src = gameState.playerAvatar || 'assets/avatars/ren.gif';
-    document.getElementById('arena-player-name').textContent = gameState.playerName;
-    document.getElementById('arena-enemy-avatar').src = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22 x=%2215%22>❓</text></svg>';
-    document.getElementById('arena-enemy-name').textContent = 'Choose Opponent';
-
-    if (btnFightNow) {
-      btnFightNow.style.display = 'block';
-      btnFightNow.disabled = true;
-      btnFightNow.style.opacity = '0.5';
-    }
-
-    // Динамічний вибір ворогів
-    const enemyGrid = document.querySelector('.enemy-grid');
-    if (enemyGrid) {
-      enemyGrid.innerHTML = '';
-      const allCharacters = [
-        { name: 'Boss', avatar: 'assets/avatars/boss.gif' },
-        { name: 'Cho', avatar: 'assets/avatars/cho.gif' },
-        { name: 'Gal', avatar: 'assets/avatars/gal.gif' },
-        { name: 'Jon', avatar: 'assets/avatars/jon.gif' },
-        { name: 'Lodman', avatar: 'assets/avatars/lodman.gif' },
-        { name: 'Ren', avatar: 'assets/avatars/ren.gif' },
-        { name: 'Ryuken', avatar: 'assets/avatars/ryuken.gif' }
-      ];
-
-      allCharacters.filter(char => char.avatar !== gameState.playerAvatar).forEach(enemy => {
-        const img = document.createElement('img');
-        img.className = 'enemy-option';
-        img.src = enemy.avatar;
-        img.addEventListener('click', () => {
-          document.getElementById('arena-enemy-avatar').src = enemy.avatar;
-          document.getElementById('arena-enemy-name').textContent = enemy.name;
-          document.querySelectorAll('.enemy-option').forEach(opt => opt.classList.remove('selected'));
-          img.classList.add('selected');
-          btnFightNow.disabled = false;
-          btnFightNow.style.opacity = '1';
-          btnFightNow.style.cursor = 'pointer';
-        });
-        enemyGrid.appendChild(img);
-      });
-    }
-    showScreen('screen-battle');
+  // Enemy Select Screen Flow
+  document.getElementById('btn-start-battle').addEventListener('click', () => {
+    renderEnemySelection();
+    showScreen('screen-enemy-select');
   });
 
-  // Натискання кнопки FIGHT!
-  btnFightNow.addEventListener('click', () => {
+  document.querySelector('.btn-enemy-select-back').addEventListener('click', () => showScreen('screen-home'));
+
+  // Start Battle after Confirming Opponent
+  document.getElementById('btn-confirm-fight').addEventListener('click', () => {
     const { maxHP } = getPlayerStats();
-    combatState.currentEnemyName = document.getElementById('arena-enemy-name').textContent;
-    combatState.playerHP = maxHP; // Встановлюємо динамічне здоров'я відповідно до екіпірованих предметів
+
+    combatState.playerHP = maxHP;
     combatState.enemyHP = 100;
+
+    document.getElementById('arena-player-avatar').src = gameState.playerAvatar || 'assets/avatars/ren.gif';
+    document.getElementById('arena-player-name').textContent = gameState.playerName;
+    document.getElementById('arena-enemy-avatar').src = `assets/avatars/${combatState.currentEnemyName.toLowerCase()}.gif`;
+    document.getElementById('arena-enemy-name').textContent = combatState.currentEnemyName;
+
     updateHPBars();
     updateZonesIndicator();
 
     document.getElementById('battle-log').innerHTML = '';
     logMessage(`⚔️ Battle started! ${gameState.playerName} (${maxHP} HP) vs ${combatState.currentEnemyName}!`, 'system');
 
-    enemySelectionBlock.classList.add('hidden');
-    combatActions.classList.remove('hidden');
-    btnFightNow.style.display = 'none';
-    btnBattleBack.style.display = 'none';
+    showScreen('screen-battle');
   });
 
-  // Обробники кліків по ТАКТИЧНИХ ЗОНАХ АТАКИ
+  // Tactical Zone Selection
   document.querySelectorAll('.btn-zone-attack').forEach(button => {
     button.addEventListener('click', () => {
       const zone = button.getAttribute('data-zone');
@@ -281,7 +283,6 @@ function setupEventListeners() {
     });
   });
 
-  // Обробники кліків по ЗОНАХ ЗАХИСТУ
   document.querySelectorAll('.btn-zone-defend').forEach(button => {
     button.addEventListener('click', () => {
       const zone = button.getAttribute('data-zone');
@@ -298,27 +299,20 @@ function setupEventListeners() {
     });
   });
 
-  // Кнопка EXECUTE TURN (Виконати хід)
+  // Execute Turn
+  const btnEndTurn = document.getElementById('btn-end-turn');
   if (btnEndTurn) {
     btnEndTurn.addEventListener('click', () => {
       executeCombatTurn((isWin) => {
-        // Callback-функція, яка спрацьовує при закінченні бою
-        combatActions.classList.add('hidden');
-        enemySelectionBlock.classList.remove('hidden');
-        btnBattleBack.style.display = 'block';
-        btnBattleBack.textContent = 'Return to Menu';
-        
         updateState({ wins: gameState.wins + (isWin ? 1 : 0), losses: gameState.losses + (isWin ? 0 : 1) });
         updateUI();
       });
-      // Оновлюємо табло після очищення вибору
       updateZonesIndicator();
     });
   }
 
-  // Кнопка Назад з арени
-  btnBattleBack.addEventListener('click', () => {
-    // ВІДНОВЛЕННЯ 3 КОЛОНОК АРЕНИ: якщо там висить Victory банер переможця, відновлюємо дефолтний каркас картки бійців
+  // Back to Menu from Battle Screen
+  document.querySelector('.btn-battle-back').addEventListener('click', () => {
     const arenaContainer = document.querySelector('.arena-container');
     if (arenaContainer && arenaContainer.querySelector('.victory-screen-wrapper')) {
       const { maxHP } = getPlayerStats();
@@ -330,120 +324,46 @@ function setupEventListeners() {
           <div class="hp-bar-container"><div id="player-hp-bar" class="hp-bar"></div></div>
           <div id="player-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">${maxHP} / ${maxHP}</div>
         </div>
-        <div id="combat-actions" class="combat-actions hidden"></div>
+        <div id="combat-actions" class="combat-actions">
+          <h4>Choose 1 attack and 2 defence zones</h4>
+          <div class="zones-columns-wrapper">
+            <div class="zone-column">
+              <span style="color: #ff4757; font-size: 12px; font-weight: bold; margin-bottom: 5px;">⚡ ATTACK</span>
+              <button type="button" class="btn-zone-attack" data-zone="Head">Head 🪖</button>
+              <button type="button" class="btn-zone-attack" data-zone="Neck">Neck 🎯</button>
+              <button type="button" class="btn-zone-attack" data-zone="Body">Body 🥋</button>
+              <button type="button" class="btn-zone-attack" data-zone="Belly">Belly 🔥</button>
+              <button type="button" class="btn-zone-attack" data-zone="Legs">Legs 🥾</button>
+            </div>
+            <div class="zone-divider" style="width: 1px; background: #444; align-self: stretch;"></div>
+            <div class="zone-column">
+              <span style="color: #2ed573; font-size: 12px; font-weight: bold; margin-bottom: 5px;">🛡️ DEFEND</span>
+              <button type="button" class="btn-zone-defend" data-zone="Head">Head 🪖</button>
+              <button type="button" class="btn-zone-defend" data-zone="Neck">Neck 🎯</button>
+              <button type="button" class="btn-zone-defend" data-zone="Body">Body 🥋</button>
+              <button type="button" class="btn-zone-defend" data-zone="Belly">Belly 🔥</button>
+              <button type="button" class="btn-zone-defend" data-zone="Legs">Legs 🥾</button>
+            </div>
+          </div>
+          <div id="selected-zones-indicator" style="margin: 5px 0; font-size: 12px; font-weight: bold; color: #eccc68; background: #222; padding: 4px 10px; border-radius: 4px; border: 1px solid #444; text-align: center; width: 90%;">
+            🎯 A: <span id="indicator-attack" style="color: #ff4757;">None</span> | 🛡️ D: <span id="indicator-defend" style="color: #2ed573;">None</span>
+          </div>
+          <button id="btn-end-turn" class="btn-primary" disabled style="margin-top: 10px; width: 100%; max-width: 200px; opacity: 0.5; cursor: not-allowed; background-color: #eccc68; color: #000; padding: 8px;">
+            EXECUTE TURN ⚔️
+          </button>
+        </div>
         <div class="fighter-card enemy-side">
           <h3>Enemy</h3>
           <img id="arena-enemy-avatar" src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22 x=%2215%22>❓</text></svg>" alt="Enemy">
-          <div id="arena-enemy-name" class="fighter-name">Choose Opponent</div>
+          <div id="arena-enemy-name" class="fighter-name">Enemy</div>
           <div class="hp-bar-container"><div id="enemy-hp-bar" class="hp-bar"></div></div>
           <div id="enemy-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
         </div>
       `;
-      combatActions = document.getElementById('combat-actions');
     }
 
-    // ВІДНОВЛЕННЯ ВЕРСТКИ КНОПОК: Повертаємо оригінальні кнопки на місце, якщо замість них був екран переможця
-    if (combatActions) {
-      combatActions.innerHTML = `
-        <h4>Choose 1 attack and 2 defence zones</h4>
-        <div class="zones-columns-wrapper">
-          <!-- Attack Column -->
-          <div class="zone-column">
-            <span style="color: #ff4757; font-size: 12px; font-weight: bold; margin-bottom: 5px;">⚡ ATTACK</span>
-            <button type="button" class="btn-zone-attack" data-zone="Head">Head 🪖</button>
-            <button type="button" class="btn-zone-attack" data-zone="Neck">Neck 🎯</button>
-            <button type="button" class="btn-zone-attack" data-zone="Body">Body 🥋</button>
-            <button type="button" class="btn-zone-attack" data-zone="Belly">Belly 🔥</button>
-            <button type="button" class="btn-zone-attack" data-zone="Legs">Legs 🥾</button>
-          </div>
-          <!-- Vertical Separator Line -->
-          <div class="zone-divider" style="width: 1px; background: #444; align-self: stretch;"></div>
-          <!-- Defend Column -->
-          <div class="zone-column">
-            <span style="color: #2ed573; font-size: 12px; font-weight: bold; margin-bottom: 5px;">🛡️ DEFEND</span>
-            <button type="button" class="btn-zone-defend" data-zone="Head">Head 🪖</button>
-            <button type="button" class="btn-zone-defend" data-zone="Neck">Neck 🎯</button>
-            <button type="button" class="btn-zone-defend" data-zone="Body">Body 🥋</button>
-            <button type="button" class="btn-zone-defend" data-zone="Belly">Belly 🔥</button>
-            <button type="button" class="btn-zone-defend" data-zone="Legs">Legs 🥾</button>
-          </div>
-        </div>
-        <!-- Live Selected Zones Dynamic Indicator -->
-        <div id="selected-zones-indicator" style="margin: 5px 0; font-size: 12px; font-weight: bold; color: #eccc68; background: #222; padding: 4px 10px; border-radius: 4px; border: 1px solid #444; text-align: center; width: 90%;">
-          🎯 A: <span id="indicator-attack" style="color: #ff4757;">None</span> | 🛡️ D: <span id="indicator-defend" style="color: #2ed573;">None</span>
-        </div>
-        <!-- Execute Turn Action Button -->
-        <button id="btn-end-turn" class="btn-primary" disabled style="margin-top: 10px; width: 100%; max-width: 200px; opacity: 0.5; cursor: not-allowed; background-color: #eccc68; color: #000; padding: 8px;">
-          EXECUTE TURN ⚔️
-        </button>
-      `;
-
-      // Наново вішаємо кліки на свіжі кнопки атаки
-      document.querySelectorAll('.btn-zone-attack').forEach(button => {
-        button.addEventListener('click', () => {
-          const zone = button.getAttribute('data-zone');
-          if (combatState.selectedAttackZone === zone) {
-            combatState.selectedAttackZone = '';
-            button.classList.remove('selected-attack');
-          } else {
-            document.querySelectorAll('.btn-zone-attack').forEach(btn => btn.classList.remove('selected-attack'));
-            combatState.selectedAttackZone = zone;
-            button.classList.add('selected-attack');
-          }
-          checkTurnReadiness();
-        });
-      });
-
-      // Наново вішаємо кліки на свіжі кнопки захисту
-      document.querySelectorAll('.btn-zone-defend').forEach(button => {
-        button.addEventListener('click', () => {
-          const zone = button.getAttribute('data-zone');
-          const idx = combatState.selectedDefendZones.indexOf(zone);
-          if (idx > -1) {
-            combatState.selectedDefendZones.splice(idx, 1);
-            button.classList.remove('selected-defend');
-          } else {
-            if (combatState.selectedDefendZones.length >= 2) return;
-            combatState.selectedDefendZones.push(zone);
-            button.classList.add('selected-defend');
-          }
-          checkTurnReadiness();
-        });
-      });
-
-      // Наново пов'язуємо кнопку виконання ходу
-      const newBtnEndTurn = document.getElementById('btn-end-turn');
-      if (newBtnEndTurn) {
-        newBtnEndTurn.addEventListener('click', () => {
-          executeCombatTurn((isWin) => {
-            combatActions.classList.add('hidden');
-            enemySelectionBlock.classList.remove('hidden');
-            btnBattleBack.style.display = 'block';
-            btnBattleBack.textContent = 'Return to Menu';
-            
-            updateState({ wins: gameState.wins + (isWin ? 1 : 0), losses: gameState.losses + (isWin ? 0 : 1) });
-            updateUI();
-          });
-          updateZonesIndicator();
-        });
-      }
-    }
-
-    // Код завершення роботи кнопки:
-    enemySelectionBlock.classList.remove('hidden');
-    combatActions.classList.add('hidden');
-    btnFightNow.style.display = 'block';
-    btnFightNow.disabled = true;
-    btnFightNow.style.opacity = '0.5';
-    
-    document.querySelectorAll('.btn-zone-attack, .btn-zone-defend, .enemy-option').forEach(opt => {
-      opt.classList.remove('selected', 'selected-attack', 'selected-defend');
-    });
-    
     combatState.selectedAttackZone = '';
     combatState.selectedDefendZones = [];
-    checkTurnReadiness();
-    btnBattleBack.textContent = 'Back to Menu';
     showScreen('screen-home');
   });
 }
