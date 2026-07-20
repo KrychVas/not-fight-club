@@ -1,4 +1,4 @@
-// Базові списки файлів, які є на скріншоті
+// Базові списки файлів
 const itemIds = [
   // Зброя (Мечі, сокири, луки, посохи)
   1448, 1449, 1450, 1451, 1453, 1454, 1455, 1456, 1459, 1462, 1463, 1465, 1466, 1476,
@@ -39,12 +39,12 @@ function generateArtifact(id) {
     slot = 'armor';
     name = `Guardian Plate #${id}`;
     bonusHP = Math.floor((id % 5) * 10 + 20); // Динамічне HP від 20 до 60
-  } else if (id >= 1912 && id <= 1982 || id >= 2052 && id <= 2054) {
+  } else if ((id >= 1912 && id <= 1982) || (id >= 2052 && id <= 2054)) {
     slot = 'helmet';
     name = `Warlord Helm #${id}`;
     bonusHP = Math.floor((id % 4) * 5 + 15);
     bonusDamage = Math.floor(id % 3);
-  } else if (id >= 1985 && id <= 2043 || id === 2055 || id === 2056) {
+  } else if ((id >= 1985 && id <= 2043) || id === 2055 || id === 2056) {
     slot = 'boots';
     name = `Stalker Boots #${id}`;
     bonusHP = Math.floor((id % 3) * 5 + 10);
@@ -62,12 +62,13 @@ function generateArtifact(id) {
     slot: slot,
     bonusDamage: bonusDamage,
     bonusHP: bonusHP,
+    stats: { hp: bonusHP, damage: bonusDamage }, // Для сумісності з калькулятором статів
     icon: iconPath,
     description: description.trim()
   };
 }
 
-// Експортуємо готову згенеровану базу даних для всієї сотні предметів
+// Експортуємо готову згенеровану базу даних
 export const ARTIFACTS_DATABASE = {};
 itemIds.forEach(id => {
   const artifact = generateArtifact(id);

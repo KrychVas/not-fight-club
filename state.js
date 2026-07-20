@@ -12,7 +12,7 @@ const defaultState = {
 
   gold: 250,
   
-  // Додаємо ВСІ артефакти з нашої бази даних в інвентар
+  // Додаємо всі артефакти з нашої динамічної бази даних в інвентар
   artifacts: Object.keys(ARTIFACTS_DATABASE), 
   
   equippedArtifacts: {
@@ -32,6 +32,7 @@ export function loadState() {
     try {
       const parsed = JSON.parse(saved);
       gameState = { ...defaultState, ...parsed };
+      
       // Гарантуємо, що нові артефакти з бази підтягнуться, якщо масив був застарілим
       if (!gameState.artifacts || gameState.artifacts.length < 10) {
         gameState.artifacts = Object.keys(ARTIFACTS_DATABASE);
@@ -64,8 +65,13 @@ export function getPlayerStats() {
     Object.values(gameState.equippedArtifacts).forEach(artifactId => {
       if (artifactId && ARTIFACTS_DATABASE[artifactId]) {
         const item = ARTIFACTS_DATABASE[artifactId];
-        if (item.bonusHP) maxHP += item.bonusHP;
-        if (item.bonusDamage) bonusDamage += item.bonusDamage;
+        
+        // Підтримка обох варіантів структури статів (прямі поля та nested object)
+        const hp = item.bonusHP ?? item.stats?.hp ?? 0;
+        const dmg = item.bonusDamage ?? item.stats?.damage ?? 0;
+
+        maxHP += hp;
+        bonusDamage += dmg;
       }
     });
   }

@@ -1,24 +1,52 @@
 import { gameState, updateState, getPlayerStats } from './state.js';
+import { ARTIFACTS_DATABASE } from './artifacts.js';
 
 export const enemyProfiles = {
-  'Spider':  { baseDamage: 12, attacksCount: 2, defendsCount: 1 },
-  'Troll':   { baseDamage: 25, attacksCount: 1, defendsCount: 3 },
-  'Boss':    { baseDamage: 20, attacksCount: 2, defendsCount: 2 },
-  'Cho':     { baseDamage: 14, attacksCount: 1, defendsCount: 2 },
-  'Gal':     { baseDamage: 16, attacksCount: 2, defendsCount: 1 },
-  'Jon':     { baseDamage: 15, attacksCount: 1, defendsCount: 2 },
-  'Lodman':  { baseDamage: 18, attacksCount: 2, defendsCount: 2 },
-  'Ren':     { baseDamage: 15, attacksCount: 1, defendsCount: 2 },
-  'Ryuken':  { baseDamage: 22, attacksCount: 1, defendsCount: 2 }
+  'Spider':  { baseDamage: 12, attacksCount: 2, defendsCount: 1, bio: 'A swift and venomous predator.' },
+  'Troll':   { baseDamage: 25, attacksCount: 1, defendsCount: 3, bio: 'A heavy powerhouse with incredible defense.' },
+  'Boss':    { baseDamage: 20, attacksCount: 2, defendsCount: 2, bio: 'The legendary arena champion.' },
+  'Cho':     { baseDamage: 14, attacksCount: 1, defendsCount: 2, bio: 'A disciplined martial artist.' },
+  'Gal':     { baseDamage: 16, attacksCount: 2, defendsCount: 1, bio: 'An aggressive dual-wielding berserker.' },
+  'Jon':     { baseDamage: 15, attacksCount: 1, defendsCount: 2, bio: 'A balanced and tricky duelist.' },
+  'Lodman':  { baseDamage: 18, attacksCount: 2, defendsCount: 2, bio: 'A armored knight with broad strikes.' },
+  'Ren':     { baseDamage: 15, attacksCount: 1, defendsCount: 2, bio: 'A swift shadow assassin.' },
+  'Ryuken':  { baseDamage: 22, attacksCount: 1, defendsCount: 2, bio: 'Master of lethal precision strikes.' }
 };
 
 export let combatState = {
   playerHP: 100,
   enemyHP: 100,
+  enemyMaxHP: 100,
   currentEnemyName: '',
   selectedAttackZone: '',
-  selectedDefendZones: []
+  selectedDefendZones: [],
+  enemyEquipment: {} // Об'єкт екіпіровки ворога: { slot: artifactId }
 };
+
+export function getEnemyStats() {
+  const profile = enemyProfiles[combatState.currentEnemyName] || { baseDamage: 15 };
+  let bonusHP = 0;
+  let bonusDmg = 0;
+
+  if (combatState.enemyEquipment) {
+    Object.values(combatState.enemyEquipment).forEach(artifactId => {
+      const art = ARTIFACTS_DATABASE[artifactId];
+      if (art) {
+        // Підтримка обох форматів статів (прямих та nested)
+        const hp = art.stats?.hp ?? art.bonusHP ?? 0;
+        const dmg = art.stats?.damage ?? art.bonusDamage ?? 0;
+
+        bonusHP += hp;
+        bonusDmg += dmg;
+      }
+    });
+  }
+
+  return {
+    maxHP: 100 + bonusHP,
+    totalDamage: profile.baseDamage + bonusDmg
+  };
+}
 
 export function logMessage(text, type = 'system') {
   const battleLog = document.getElementById('battle-log');
@@ -31,25 +59,27 @@ export function logMessage(text, type = 'system') {
 }
 
 export function updateHPBars() {
-  const { maxHP } = getPlayerStats();
+  const { maxHP: playerMaxHP } = getPlayerStats();
+  const enemyMaxHP = combatState.enemyMaxHP || 100;
+
   const pBar = document.getElementById('player-hp-bar');
   const pText = document.getElementById('player-hp-text');
   const eBar = document.getElementById('enemy-hp-bar');
   const eText = document.getElementById('enemy-hp-text');
 
   if (pBar && pText) {
-    const playerHpPercent = Math.max(0, Math.min(100, (combatState.playerHP / maxHP) * 100));
+    const playerHpPercent = Math.max(0, Math.min(100, (combatState.playerHP / playerMaxHP) * 100));
     pBar.style.width = `${playerHpPercent}%`;
-    pText.textContent = `${combatState.playerHP} / ${maxHP}`;
+    pText.textContent = `${combatState.playerHP} / ${playerMaxHP}`;
     pBar.className = 'hp-bar';
     if (playerHpPercent <= 20) pBar.classList.add('danger');
     else if (playerHpPercent <= 50) pBar.classList.add('warning');
   }
 
   if (eBar && eText) {
-    const enemyHpPercent = Math.max(0, Math.min(100, combatState.enemyHP));
+    const enemyHpPercent = Math.max(0, Math.min(100, (combatState.enemyHP / enemyMaxHP) * 100));
     eBar.style.width = `${enemyHpPercent}%`;
-    eText.textContent = `${combatState.enemyHP} / 100`;
+    eText.textContent = `${combatState.enemyHP} / ${enemyMaxHP}`;
     eBar.className = 'hp-bar';
     if (enemyHpPercent <= 20) eBar.classList.add('danger');
     else if (enemyHpPercent <= 50) eBar.classList.add('warning');
@@ -82,7 +112,6 @@ function getRandomZones(count) {
   return result;
 }
 
-// АНІМАЦІЯ УРОНУ: Зміна статичної картинки на агресивну
 function triggerHitAnimation(isPlayer, baseAvatarPath) {
   const imgElement = document.getElementById(isPlayer ? 'arena-player-avatar' : 'arena-enemy-avatar');
   if (!imgElement) return;
@@ -99,15 +128,14 @@ function triggerHitAnimation(isPlayer, baseAvatarPath) {
 
 export function executeCombatTurn(onBattleEndCallback) {
   const profile = enemyProfiles[combatState.currentEnemyName] || { baseDamage: 15, attacksCount: 1, defendsCount: 2 };
+  const enemyStats = getEnemyStats();
   
-  // Враховуємо додатковий урон від екіпірованих предметів
   const { bonusDamage } = getPlayerStats();
   const playerBaseDmg = 15 + bonusDamage;
 
   const enemyAttacks = getRandomZones(profile.attacksCount);
   const enemyDefends = getRandomZones(profile.defendsCount);
 
-  // Зберігаємо базові шляхи до поточних бойових аватарок
   const playerAvatarBase = gameState.playerAvatar || 'assets/avatars/ren.gif';
   const enemyAvatarBase = `assets/avatars/${combatState.currentEnemyName.toLowerCase()}.gif`;
 
@@ -130,7 +158,7 @@ export function executeCombatTurn(onBattleEndCallback) {
     triggerHitAnimation(false, enemyAvatarBase);
   }
 
-  // 2. Атаки Ворога
+  // 2. Атаки Ворога (з урахуванням екіпіровки)
   enemyAttacks.forEach(attackZone => {
     const isEnemyCrit = Math.random() < 0.15;
     const isPlayerBlockingEnemy = combatState.selectedDefendZones.includes(attackZone);
@@ -138,7 +166,7 @@ export function executeCombatTurn(onBattleEndCallback) {
     if (isPlayerBlockingEnemy && !isEnemyCrit) {
       logMessage(`🛡️ ${gameState.playerName} successfully BLOCKED ${combatState.currentEnemyName}'s attack on ${attackZone}!`, 'player');
     } else {
-      let damage = profile.baseDamage;
+      let damage = enemyStats.totalDamage;
       let critText = '';
       if (isEnemyCrit) {
         damage = Math.floor(damage * 1.5);
@@ -153,7 +181,6 @@ export function executeCombatTurn(onBattleEndCallback) {
 
   updateHPBars();
 
-  // Очищення вибору зон на кнопках
   combatState.selectedAttackZone = '';
   combatState.selectedDefendZones = [];
   document.querySelectorAll('.btn-zone-attack, .btn-zone-defend').forEach(btn => {
@@ -161,7 +188,7 @@ export function executeCombatTurn(onBattleEndCallback) {
   });
   validateTurnReadiness();
 
-  // Перевірка результату бою
+  // 3. Перевірка результату бою
   if (combatState.playerHP <= 0 && combatState.enemyHP <= 0) {
     logMessage(`🤝 DRAW! Both fighters knocked each other out!`, 'system');
     onBattleEndCallback(false);
@@ -169,16 +196,14 @@ export function executeCombatTurn(onBattleEndCallback) {
   else if (combatState.enemyHP <= 0) {
     logMessage(`🏆 VICTORY! ${gameState.playerName} defeated ${combatState.currentEnemyName}!`, 'system');
     
-    // Очищуємо ім'я файлу від цифр на кшталт "ren1.png" чи ".gif", щоб отримати чисте "ren_plane.png"
     let baseName = 'ren';
-    const filename = playerAvatarBase.split('/').pop(); // отримаємо наприклад 'ren1.png'
-    const match = filename.match(/^([a-zA-Z]+)/); // витягнемо суто літери 'ren'
+    const filename = playerAvatarBase.split('/').pop();
+    const match = filename.match(/^([a-zA-Z]+)/);
     if (match && match[1]) {
       baseName = match[1].toLowerCase();
     }
     const planeAvatar = `assets/avatars/${baseName}_plane.png`;
 
-    // Замінюємо `.arena-container` великою тріумфальною панорамою гравця
     const arenaContainer = document.querySelector('.arena-container');
     if (arenaContainer) {
       arenaContainer.innerHTML = `
@@ -199,7 +224,6 @@ export function executeCombatTurn(onBattleEndCallback) {
     const enemyNameLower = combatState.currentEnemyName.toLowerCase();
     const planeAvatar = `assets/avatars/${enemyNameLower}_plane.png`;
 
-    // Замінюємо `.arena-container` великою тріумфальною панорамою бота
     const arenaContainer = document.querySelector('.arena-container');
     if (arenaContainer) {
       arenaContainer.innerHTML = `

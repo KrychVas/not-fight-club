@@ -37,20 +37,43 @@
     <!-- SCREEN: ENEMY SELECTION & PREP -->
     <section id="screen-enemy-select" class="screen hidden">
       <h2>Select Your Opponent</h2>
-      <p style="color: #aaa; font-size: 13px; margin-bottom: 15px;">Choose who you want to challenge in the ring:</p>
 
-      <!-- Grid of enemy cards -->
-      <div id="enemy-select-grid" class="enemy-select-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px;">
-        <!-- Dynamic content via app.js -->
+      <!-- SELECT ENEMY AT THE TOP -->
+      <div class="avatar-selection" style="margin-bottom: 15px;">
+        <h4 style="font-size: 13px; color: #aaa; margin-bottom: 8px;">Choose Opponent:</h4>
+        <div id="enemy-select-grid" class="enemy-select-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px;">
+          <!-- Dynamic enemy selector -->
+        </div>
       </div>
 
-      <!-- Enemy Stats Preview Card -->
-      <div id="selected-enemy-preview" style="background: #1e1e1e; border: 1px solid #444; border-radius: 8px; padding: 15px; margin-bottom: 20px; display: none;">
-        <h3 id="preview-enemy-name" style="color: #ff4757; margin-bottom: 8px;">Enemy Name</h3>
-        <div style="display: flex; justify-content: space-around; font-size: 13px; color: #ccc;">
-          <span>⚔️ Base Dmg: <strong id="preview-enemy-dmg" style="color: #ff4757;">0</strong></span>
-          <span>⚡ Attacks: <strong id="preview-enemy-attacks" style="color: #eccc68;">0</strong></span>
-          <span>🛡️ Defends: <strong id="preview-enemy-defends" style="color: #2ed573;">0</strong></span>
+      <!-- SELECTED ENEMY CENTERED PROFILE -->
+      <div id="selected-enemy-preview" style="display: none; margin-bottom: 15px;">
+        <div class="character-profile" style="text-align: center; margin-bottom: 15px;">
+          <img id="preview-enemy-avatar" src="" alt="Enemy Avatar" style="width: 80px; height: 80px; object-fit: contain;">
+          <h3 id="preview-enemy-name" style="margin-top: 5px; color: #ff4757;">Enemy Name</h3>
+          <p id="preview-enemy-bio" style="font-size: 12px; color: #aaa; margin: 4px 0 8px; font-style: italic;">Opponent Bio</p>
+
+          <div class="player-stats-summary" style="display: flex; justify-content: center; gap: 15px; margin-top: 6px; font-weight: bold; font-size: 14px;">
+            <span style="color: #ff4757;">⚔️ Attack: <span id="preview-enemy-dmg">15</span></span>
+            <span style="color: #2ed573;">❤️ Max HP: <span id="preview-enemy-hp">100</span></span>
+          </div>
+        </div>
+
+        <!-- Enemy Equipment & Inventory -->
+        <div class="artifacts-container">
+          <h4 style="color: #eccc68; margin-bottom: 5px; text-align: center;">Equipped Items</h4>
+          <div id="enemy-slots-grid" class="equipped-slots-grid">
+            <div class="artifact-slot enemy-slot" data-slot="helmet" title="Helmet Slot"><span>🪖 Helm</span></div>
+            <div class="artifact-slot enemy-slot" data-slot="weapon" title="Weapon Slot"><span>⚔️ Weapon</span></div>
+            <div class="artifact-slot enemy-slot" data-slot="armor" title="Armor Slot"><span>🥋 Armor</span></div>
+            <div class="artifact-slot enemy-slot" data-slot="boots" title="Boots Slot"><span>🥾 Boots</span></div>
+            <div class="artifact-slot enemy-slot" data-slot="ring" title="Ring Slot"><span>✨ Ring</span></div>
+          </div>
+
+          <h4 style="color: #aaa; margin-top: 15px; margin-bottom: 5px; text-align: center;">Inventory</h4>
+          <div id="enemy-inventory-grid" class="inventory-grid">
+            <!-- Dynamic artifacts to equip enemy -->
+          </div>
         </div>
       </div>
 
@@ -63,57 +86,41 @@
     <!-- SCREEN 3: CHARACTER CARD -->
     <section id="screen-character" class="screen hidden">
       <h2>Character Card</h2>
-      
-      <div class="character-profile">
-        <img id="char-current-avatar" src="assets/avatars/ren.gif" alt="Current Avatar">
-        <h3 id="char-player-name">Fighter</h3>
-        <p class="stats">Wins: <span id="char-wins">0</span> | Losses: <span id="char-losses">0</span></p>
+
+      <!-- SELECT FIGHTER AT THE TOP -->
+      <div class="avatar-selection" style="margin-bottom: 15px;">
+        <h4 style="font-size: 13px; color: #aaa; margin-bottom: 8px;">Choose Your Fighter Avatar:</h4>
+        <div id="player-avatar-grid" class="enemy-select-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px;">
+          <!-- Dynamic hero selector -->
+        </div>
+      </div>
+
+      <!-- PROFILE DISPLAY -->
+      <div class="character-profile" style="text-align: center; margin-bottom: 15px;">
+        <img id="char-current-avatar" src="assets/avatars/ren.gif" alt="Current Avatar" style="width: 80px; height: 80px; object-fit: contain;">
+        <h3 id="char-player-name" style="margin-top: 5px;">Fighter</h3>
+        <p id="char-player-bio" style="font-size: 12px; color: #aaa; margin: 4px 0; font-style: italic;"></p>
+        <p class="stats" style="font-size: 12px; color: #888;">Wins: <span id="char-wins">0</span> | Losses: <span id="char-losses">0</span></p>
         
-        <!-- STATS SUMMARY -->
-        <div class="player-stats-summary" style="display: flex; justify-content: center; gap: 15px; margin-top: 8px; font-weight: bold; font-size: 14px;">
+        <div class="player-stats-summary" style="display: flex; justify-content: center; gap: 15px; margin-top: 6px; font-weight: bold; font-size: 14px;">
           <span style="color: #ff4757;">⚔️ Attack: <span id="char-stat-dmg">15</span></span>
           <span style="color: #2ed573;">❤️ Max HP: <span id="char-stat-hp">100</span></span>
         </div>
       </div>
 
-      <!-- ARTIFACTS & EQUIPMENT SECTION -->
+      <!-- ARTIFACTS & EQUIPMENT -->
       <div class="artifacts-container">
-        <h4 style="color: #eccc68; margin-bottom: 5px;">Equipped Items</h4>
+        <h4 style="color: #eccc68; margin-bottom: 5px; text-align: center;">Equipped Items</h4>
         <div class="equipped-slots-grid">
-          <div class="artifact-slot" data-slot="helmet" title="Helmet Slot">
-            <span>🪖 Helm</span>
-          </div>
-          <div class="artifact-slot" data-slot="weapon" title="Weapon Slot">
-            <span>⚔️ Weapon</span>
-          </div>
-          <div class="artifact-slot" data-slot="armor" title="Armor Slot">
-            <span>🥋 Armor</span>
-          </div>
-          <div class="artifact-slot" data-slot="boots" title="Boots Slot">
-            <span>🥾 Boots</span>
-          </div>
-          <div class="artifact-slot" data-slot="ring" title="Ring Slot">
-            <span>✨ Ring</span>
-          </div>
+          <div class="artifact-slot" data-slot="helmet" title="Helmet Slot"><span>🪖 Helm</span></div>
+          <div class="artifact-slot" data-slot="weapon" title="Weapon Slot"><span>⚔️ Weapon</span></div>
+          <div class="artifact-slot" data-slot="armor" title="Armor Slot"><span>🥋 Armor</span></div>
+          <div class="artifact-slot" data-slot="boots" title="Boots Slot"><span>🥾 Boots</span></div>
+          <div class="artifact-slot" data-slot="ring" title="Ring Slot"><span>✨ Ring</span></div>
         </div>
 
-        <h4 style="color: #aaa; margin-top: 15px; margin-bottom: 5px;">Inventory</h4>
-        <div id="inventory-grid" class="inventory-grid">
-          <!-- Inventory items -->
-        </div>
-      </div>
-
-      <div class="avatar-selection" style="margin-top: 20px;">
-        <h4>Choose Your Fighter:</h4>
-        <div class="avatar-grid">
-          <img class="avatar-option" src="assets/avatars/ren.gif" data-avatar="assets/avatars/ren.gif" alt="Ren">
-          <img class="avatar-option" src="assets/avatars/jon.gif" data-avatar="assets/avatars/jon.gif" alt="Jon">
-          <img class="avatar-option" src="assets/avatars/gal.gif" data-avatar="assets/avatars/gal.gif" alt="Gal">
-          <img class="avatar-option" src="assets/avatars/cho.gif" data-avatar="assets/avatars/cho.gif" alt="Cho">
-          <img class="avatar-option" src="assets/avatars/boss.gif" data-avatar="assets/avatars/boss.gif" alt="Boss">
-          <img class="avatar-option" src="assets/avatars/lodman.gif" data-avatar="assets/avatars/lodman.gif" alt="Lodman">
-          <img class="avatar-option" src="assets/avatars/ryuken.gif" data-avatar="assets/avatars/ryuken.gif" alt="Ryuken">
-        </div>
+        <h4 style="color: #aaa; margin-top: 15px; margin-bottom: 5px; text-align: center;">Inventory</h4>
+        <div id="inventory-grid" class="inventory-grid"></div>
       </div>
 
       <button class="btn-back btn-character-back" style="background-color: #555; margin-top: 20px;">Back to Menu</button>
@@ -136,7 +143,6 @@
       <h2>Battle Arena</h2>
       
       <div class="arena-container">
-        <!-- LEFT COLUMN: Player Profile & HP -->
         <div class="fighter-card player-side">
           <h3>Your Fighter</h3>
           <img id="arena-player-avatar" src="assets/avatars/ren.gif" alt="Player">
@@ -147,7 +153,6 @@
           <div id="player-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
         </div>
 
-        <!-- CENTER COLUMN: Combat Actions -->
         <div id="combat-actions" class="combat-actions">
           <h4>Choose 1 attack and 2 defence zones</h4>
           
@@ -182,7 +187,6 @@
           </button>
         </div>
 
-        <!-- RIGHT COLUMN: Enemy Profile & HP -->
         <div class="fighter-card enemy-side">
           <h3>Enemy</h3>
           <img id="arena-enemy-avatar" src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22 x=%2215%22>❓</text></svg>" alt="Enemy">

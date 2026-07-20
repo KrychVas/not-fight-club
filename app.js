@@ -1,6 +1,12 @@
 import { gameState, loadState, updateState, getPlayerStats } from './state.js';
-import { combatState, executeCombatTurn, logMessage, updateHPBars, validateTurnReadiness, enemyProfiles } from './combat.js';
+import { combatState, executeCombatTurn, logMessage, updateHPBars, validateTurnReadiness, enemyProfiles, getEnemyStats } from './combat.js';
 import { ARTIFACTS_DATABASE } from './artifacts.js';
+
+// Допоміжна функція для формування підказки (Tooltip)
+function getArtifactTooltip(artifact) {
+  if (!artifact) return '';
+  return `${artifact.name} (${artifact.slot.toUpperCase()})\n${artifact.description}`;
+}
 
 function showScreen(screenId) {
   const screens = document.querySelectorAll('.screen');
@@ -45,13 +51,55 @@ function updateUI() {
   const currentAvatarImg = document.getElementById('char-current-avatar');
   if (currentAvatarImg) currentAvatarImg.src = gameState.playerAvatar || 'assets/avatars/ren.gif';
 
-  document.querySelectorAll('.avatar-option').forEach(img => {
-    img.getAttribute('data-avatar') === gameState.playerAvatar ? img.classList.add('selected') : img.classList.remove('selected');
-  });
+  // Відображення опису обраного героя гравця
+  const avatarName = (gameState.playerAvatar || 'ren.gif').split('/').pop().replace('.gif','');
+  const heroNameCap = avatarName.charAt(0).toUpperCase() + avatarName.slice(1);
+  const heroProfile = enemyProfiles[heroNameCap];
+  const charBioEl = document.getElementById('char-player-bio');
+  if (charBioEl && heroProfile) {
+    charBioEl.textContent = heroProfile.bio;
+  }
 
+  renderPlayerAvatarPicker();
   renderArtifactsUI();
 }
 
+// --- PLAYER AVATAR PICKER (CHARACTER CARD) ---
+function renderPlayerAvatarPicker() {
+  const container = document.getElementById('player-avatar-grid');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const allCharacters = [
+    { name: 'Boss', avatar: 'assets/avatars/boss.gif' },
+    { name: 'Cho', avatar: 'assets/avatars/cho.gif' },
+    { name: 'Gal', avatar: 'assets/avatars/gal.gif' },
+    { name: 'Jon', avatar: 'assets/avatars/jon.gif' },
+    { name: 'Lodman', avatar: 'assets/avatars/lodman.gif' },
+    { name: 'Ren', avatar: 'assets/avatars/ren.gif' },
+    { name: 'Ryuken', avatar: 'assets/avatars/ryuken.gif' }
+  ];
+
+  allCharacters.forEach(char => {
+    const isSelected = (gameState.playerAvatar || 'assets/avatars/ren.gif') === char.avatar;
+    const card = document.createElement('div');
+    card.style.cssText = `background: #222; border: 2px solid ${isSelected ? '#2ed573' : '#444'}; border-radius: 6px; padding: 6px; text-align: center; cursor: pointer; transition: all 0.2s;`;
+    
+    card.innerHTML = `
+      <img src="${char.avatar}" style="width: 45px; height: 45px; object-fit: contain; margin-bottom: 2px;" alt="${char.name}">
+      <div style="font-weight: bold; font-size: 11px;">${char.name}</div>
+    `;
+
+    card.addEventListener('click', () => {
+      updateState({ playerAvatar: char.avatar });
+      updateUI();
+    });
+
+    container.appendChild(card);
+  });
+}
+
+// --- PLAYER ARTIFACTS RENDER ---
 function renderArtifactsUI() {
   const inventoryGrid = document.getElementById('inventory-grid');
   if (!inventoryGrid) return;
@@ -60,7 +108,7 @@ function renderArtifactsUI() {
 
   const slots = ['helmet', 'weapon', 'armor', 'boots', 'ring'];
   slots.forEach(slotType => {
-    const slotEl = document.querySelector(`.artifact-slot[data-slot="${slotType}"]`);
+    const slotEl = document.querySelector(`.artifact-slot[data-slot="${slotType}"]:not(.enemy-slot)`);
     if (!slotEl) return;
 
     const equippedId = gameState.equippedArtifacts ? gameState.equippedArtifacts[slotType] : null;
@@ -68,11 +116,13 @@ function renderArtifactsUI() {
 
     if (artifact) {
       slotEl.classList.add('active');
-      slotEl.innerHTML = `<img src="${artifact.icon}" alt="${artifact.name}" title="${artifact.name} (${artifact.description})">`;
+      slotEl.title = getArtifactTooltip(artifact);
+      slotEl.innerHTML = `<img src="${artifact.icon}" alt="${artifact.name}">`;
       slotEl.onclick = () => unequipArtifact(slotType);
     } else {
       slotEl.classList.remove('active');
       const icons = { helmet: '🪖 Helm', weapon: '⚔️ Weapon', armor: '🥋 Armor', boots: '🥾 Boots', ring: '✨ Ring' };
+      slotEl.title = `${slotType.toUpperCase()} slot`;
       slotEl.innerHTML = `<span>${icons[slotType]}</span>`;
       slotEl.onclick = null;
     }
@@ -87,7 +137,7 @@ function renderArtifactsUI() {
       
       const itemEl = document.createElement('div');
       itemEl.className = `inventory-item ${isEquipped ? 'equipped-now' : ''}`;
-      itemEl.title = `${artifact.name}\nSlot: ${artifact.slot}\n${artifact.description}`;
+      itemEl.title = getArtifactTooltip(artifact);
       itemEl.innerHTML = `<img src="${artifact.icon}" alt="${artifact.name}">`;
 
       if (!isEquipped) {
@@ -118,6 +168,7 @@ function unequipArtifact(slotType) {
   updateUI();
 }
 
+// --- ENEMY SELECTION & ENEMY EQUIPMENT SYSTEM ---
 function renderEnemySelection() {
   const enemyGrid = document.getElementById('enemy-select-grid');
   const previewBox = document.getElementById('selected-enemy-preview');
@@ -130,6 +181,8 @@ function renderEnemySelection() {
   btnConfirm.style.opacity = '0.5';
   btnConfirm.style.cursor = 'not-allowed';
 
+  combatState.enemyEquipment = {};
+
   const allEnemies = [
     { name: 'Boss', avatar: 'assets/avatars/boss.gif' },
     { name: 'Cho', avatar: 'assets/avatars/cho.gif' },
@@ -141,15 +194,13 @@ function renderEnemySelection() {
   ];
 
   allEnemies.filter(e => e.avatar !== gameState.playerAvatar).forEach(enemy => {
-    const profile = enemyProfiles[enemy.name] || { baseDamage: 15, attacksCount: 1, defendsCount: 2 };
-
     const card = document.createElement('div');
     card.className = 'enemy-card-option';
-    card.style.cssText = 'background: #222; border: 2px solid #444; border-radius: 6px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s;';
+    card.style.cssText = 'background: #222; border: 2px solid #444; border-radius: 6px; padding: 6px; text-align: center; cursor: pointer; transition: all 0.2s;';
     
     card.innerHTML = `
-      <img src="${enemy.avatar}" style="width: 60px; height: 60px; object-fit: contain; margin-bottom: 5px;" alt="${enemy.name}">
-      <div style="font-weight: bold; font-size: 14px;">${enemy.name}</div>
+      <img src="${enemy.avatar}" style="width: 45px; height: 45px; object-fit: contain; margin-bottom: 2px;" alt="${enemy.name}">
+      <div style="font-weight: bold; font-size: 11px;">${enemy.name}</div>
     `;
 
     card.addEventListener('click', () => {
@@ -157,14 +208,12 @@ function renderEnemySelection() {
       card.style.borderColor = '#ff4757';
 
       combatState.currentEnemyName = enemy.name;
+      combatState.enemyEquipment = {};
       
-      document.getElementById('preview-enemy-name').textContent = enemy.name;
-      document.getElementById('preview-enemy-dmg').textContent = profile.baseDamage;
-      document.getElementById('preview-enemy-attacks').textContent = profile.attacksCount;
-      document.getElementById('preview-enemy-defends').textContent = profile.defendsCount;
-      
-      previewBox.style.display = 'block';
+      document.getElementById('preview-enemy-avatar').src = enemy.avatar;
+      updateEnemyUI();
 
+      previewBox.style.display = 'block';
       btnConfirm.disabled = false;
       btnConfirm.style.opacity = '1';
       btnConfirm.style.cursor = 'pointer';
@@ -172,6 +221,79 @@ function renderEnemySelection() {
 
     enemyGrid.appendChild(card);
   });
+}
+
+function updateEnemyUI() {
+  const profile = enemyProfiles[combatState.currentEnemyName] || {};
+  const stats = getEnemyStats();
+
+  document.getElementById('preview-enemy-name').textContent = combatState.currentEnemyName;
+  const enemyBioEl = document.getElementById('preview-enemy-bio');
+  if (enemyBioEl) {
+    enemyBioEl.textContent = profile.bio || 'Formidable opponent in the arena.';
+  }
+  document.getElementById('preview-enemy-hp').textContent = stats.maxHP;
+  document.getElementById('preview-enemy-dmg').textContent = stats.totalDamage;
+
+  renderEnemyArtifactsUI();
+}
+
+function renderEnemyArtifactsUI() {
+  const enemyInventoryGrid = document.getElementById('enemy-inventory-grid');
+  if (!enemyInventoryGrid) return;
+
+  enemyInventoryGrid.innerHTML = '';
+
+  const slots = ['helmet', 'weapon', 'armor', 'boots', 'ring'];
+  slots.forEach(slotType => {
+    const slotEl = document.querySelector(`.enemy-slot[data-slot="${slotType}"]`);
+    if (!slotEl) return;
+
+    const equippedId = combatState.enemyEquipment[slotType];
+    const artifact = ARTIFACTS_DATABASE[equippedId];
+
+    if (artifact) {
+      slotEl.classList.add('active');
+      slotEl.title = getArtifactTooltip(artifact);
+      slotEl.innerHTML = `<img src="${artifact.icon}" alt="${artifact.name}">`;
+      slotEl.onclick = () => unequipEnemyArtifact(slotType);
+    } else {
+      slotEl.classList.remove('active');
+      const icons = { helmet: '🪖 Helm', weapon: '⚔️ Weapon', armor: '🥋 Armor', boots: '🥾 Boots', ring: '✨ Ring' };
+      slotEl.title = `${slotType.toUpperCase()} slot`;
+      slotEl.innerHTML = `<span>${icons[slotType]}</span>`;
+      slotEl.onclick = null;
+    }
+  });
+
+  Object.keys(ARTIFACTS_DATABASE).forEach(artifactId => {
+    const artifact = ARTIFACTS_DATABASE[artifactId];
+    const isEquipped = Object.values(combatState.enemyEquipment).includes(artifactId);
+
+    const itemEl = document.createElement('div');
+    itemEl.className = `inventory-item ${isEquipped ? 'equipped-now' : ''}`;
+    itemEl.title = getArtifactTooltip(artifact);
+    itemEl.innerHTML = `<img src="${artifact.icon}" alt="${artifact.name}">`;
+
+    if (!isEquipped) {
+      itemEl.addEventListener('click', () => equipEnemyArtifact(artifactId));
+    }
+
+    enemyInventoryGrid.appendChild(itemEl);
+  });
+}
+
+function equipEnemyArtifact(artifactId) {
+  const artifact = ARTIFACTS_DATABASE[artifactId];
+  if (!artifact) return;
+
+  combatState.enemyEquipment[artifact.slot] = artifactId;
+  updateEnemyUI();
+}
+
+function unequipEnemyArtifact(slotType) {
+  delete combatState.enemyEquipment[slotType];
+  updateEnemyUI();
 }
 
 function updateZonesIndicator() {
@@ -192,7 +314,6 @@ function checkTurnReadiness() {
 }
 
 function setupEventListeners() {
-  // Navigation
   document.getElementById('btn-register').addEventListener('click', () => {
     const name = document.getElementById('reg-name').value.trim();
     if (!name) return alert("Please enter your fighter's name!");
@@ -211,16 +332,8 @@ function setupEventListeners() {
     showScreen('screen-character');
   });
 
-  document.querySelectorAll('.avatar-option').forEach(option => {
-    option.addEventListener('click', (e) => {
-      updateState({ playerAvatar: e.target.getAttribute('data-avatar') });
-      updateUI();
-    });
-  });
-
   document.querySelector('.btn-character-back').addEventListener('click', () => showScreen('screen-home'));
 
-  // Settings
   document.getElementById('btn-save-settings').addEventListener('click', () => {
     const newName = document.getElementById('settings-name').value.trim();
     if (!newName) return alert("Fighter's name cannot be empty!");
@@ -238,7 +351,6 @@ function setupEventListeners() {
 
   document.querySelector('.btn-settings-back').addEventListener('click', () => showScreen('screen-home'));
 
-  // Enemy Select Screen Flow
   document.getElementById('btn-start-battle').addEventListener('click', () => {
     renderEnemySelection();
     showScreen('screen-enemy-select');
@@ -246,12 +358,13 @@ function setupEventListeners() {
 
   document.querySelector('.btn-enemy-select-back').addEventListener('click', () => showScreen('screen-home'));
 
-  // Start Battle after Confirming Opponent
   document.getElementById('btn-confirm-fight').addEventListener('click', () => {
     const { maxHP } = getPlayerStats();
+    const enemyStats = getEnemyStats();
 
     combatState.playerHP = maxHP;
-    combatState.enemyHP = 100;
+    combatState.enemyHP = enemyStats.maxHP;
+    combatState.enemyMaxHP = enemyStats.maxHP;
 
     document.getElementById('arena-player-avatar').src = gameState.playerAvatar || 'assets/avatars/ren.gif';
     document.getElementById('arena-player-name').textContent = gameState.playerName;
@@ -262,12 +375,11 @@ function setupEventListeners() {
     updateZonesIndicator();
 
     document.getElementById('battle-log').innerHTML = '';
-    logMessage(`⚔️ Battle started! ${gameState.playerName} (${maxHP} HP) vs ${combatState.currentEnemyName}!`, 'system');
+    logMessage(`⚔️ Battle started! ${gameState.playerName} (${maxHP} HP) vs ${combatState.currentEnemyName} (${enemyStats.maxHP} HP)!`, 'system');
 
     showScreen('screen-battle');
   });
 
-  // Tactical Zone Selection
   document.querySelectorAll('.btn-zone-attack').forEach(button => {
     button.addEventListener('click', () => {
       const zone = button.getAttribute('data-zone');
@@ -299,7 +411,6 @@ function setupEventListeners() {
     });
   });
 
-  // Execute Turn
   const btnEndTurn = document.getElementById('btn-end-turn');
   if (btnEndTurn) {
     btnEndTurn.addEventListener('click', () => {
@@ -311,7 +422,6 @@ function setupEventListeners() {
     });
   }
 
-  // Back to Menu from Battle Screen
   document.querySelector('.btn-battle-back').addEventListener('click', () => {
     const arenaContainer = document.querySelector('.arena-container');
     if (arenaContainer && arenaContainer.querySelector('.victory-screen-wrapper')) {
