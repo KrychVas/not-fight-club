@@ -448,3 +448,30 @@ label {
   scrollbar-width: thin;
   scrollbar-color: #444 #111;
 }
+
+/* --- ARENA THEMES --- */
+body.theme-default {
+  background-color: #121212;
+}
+
+body.theme-cyberpunk {
+  background: linear-gradient(135deg, #0d0221 0%, #02010a 50%, #240046 100%);
+}
+body.theme-cyberpunk #app-container {
+  border-color: #ff007f;
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.3);
+}
+
+body.theme-dojo {
+  background: linear-gradient(135deg, #1c1917 0%, #292524 100%);
+}
+body.theme-dojo #app-container {
+  border-color: #eccc68;
+}
+
+body.theme-dungeon {
+  background: linear-gradient(135deg, #050505 0%, #1a0000 100%);
+}
+body.theme-dungeon #app-container {
+  border-color: #ff4757;
+}

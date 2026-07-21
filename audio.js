@@ -1,11 +1,30 @@
-// --- AUDIO SYSTEM (Web Audio API Synthesizer & SFX Manager) ---
+// --- AUDIO SYSTEM (Sound Manager with OGG BGM & Web Audio SFX) ---
 
 class SoundManager {
   constructor() {
     this.audioCtx = null;
-    this.isMuted = false;
-    this.bgmVolume = 0.3;
+    this.isSFXMuted = false;
+    this.isBGMMuted = false;
     this.sfxVolume = 0.5;
+
+    // Плейлист треків
+    this.tracks = {
+      menu: new Audio('assets/audio/Common Fight.ogg'),     // Головне меню та Налаштування
+      select: new Audio('assets/audio/Central City.ogg'),  // Вибір бійця та підготовка
+      battle: new Audio('assets/audio/Chiptronical.ogg'),  // Звичайні бої на арені
+      boss: new Audio('assets/audio/Boss Fight.ogg'),      // Бій проти боса (Boss)
+      gameOver: new Audio('assets/audio/Game Over.ogg')   // Музика поразки
+    };
+
+    // Налаштування фонових треків (зациклення та гучність)
+    ['menu', 'select', 'battle', 'boss'].forEach(key => {
+      this.tracks[key].loop = true;
+      this.tracks[key].volume = 0.25;
+    });
+
+    this.tracks.gameOver.volume = 0.4;
+    this.currentTrack = null;
+    this.currentTrackKey = null;
   }
 
   init() {
@@ -20,9 +39,54 @@ class SoundManager {
     }
   }
 
+  // --- BACKGROUND MUSIC SYSTEM ---
+
+  playBGM(trackKey = 'menu') {
+    if (this.isBGMMuted || !this.tracks[trackKey]) return;
+
+    // Якщо той самий трек вже грає — не перезапускаємо його
+    if (this.currentTrackKey === trackKey && this.currentTrack && !this.currentTrack.paused) {
+      return;
+    }
+
+    this.stopBGM();
+
+    this.currentTrackKey = trackKey;
+    this.currentTrack = this.tracks[trackKey];
+    this.currentTrack.currentTime = 0;
+
+    this.currentTrack.play().catch(err => {
+      console.log(`BGM [${trackKey}] play blocked by browser interaction policy:`, err);
+    });
+  }
+
+  stopBGM() {
+    if (this.currentTrack) {
+      this.currentTrack.pause();
+      this.currentTrack.currentTime = 0;
+      this.currentTrack = null;
+      this.currentTrackKey = null;
+    }
+  }
+
+  toggleBGM(isMuted) {
+    this.isBGMMuted = isMuted;
+    if (isMuted) {
+      this.stopBGM();
+    } else {
+      this.playBGM(this.currentTrackKey || 'menu');
+    }
+  }
+
+  toggleSFX(isMuted) {
+    this.isSFXMuted = isMuted;
+  }
+
+  // --- SOUND EFFECTS (SFX via Web Audio API) ---
+
   // Генерація синтезованого звуку удару (Punch SFX)
   playHitSound(isCrit = false) {
-    if (this.isMuted) return;
+    if (this.isSFXMuted) return;
     this.init();
     if (!this.audioCtx) return;
 
@@ -31,7 +95,6 @@ class SoundManager {
 
     osc.type = isCrit ? 'sawtooth' : 'triangle';
     
-    // Частота падає для створення ефекту "удару"
     const startFreq = isCrit ? 350 : 180;
     const endFreq = 40;
     
@@ -48,9 +111,9 @@ class SoundManager {
     osc.stop(this.audioCtx.currentTime + (isCrit ? 0.3 : 0.15));
   }
 
-  // Звук заблокованого удару (Block SFX - металевий глухий звук)
+  // Звук заблокованого удару (Block SFX)
   playBlockSound() {
-    if (this.isMuted) return;
+    if (this.isSFXMuted) return;
     this.init();
     if (!this.audioCtx) return;
 
@@ -73,7 +136,7 @@ class SoundManager {
 
   // Звук перемоги (Victory Fanfare)
   playVictorySound() {
-    if (this.isMuted) return;
+    if (this.isSFXMuted) return;
     this.init();
     if (!this.audioCtx) return;
 
@@ -97,34 +160,13 @@ class SoundManager {
     });
   }
 
-  // Звук поразки (Defeat SFX)
+  // Звук поразки (Грає трек Game Over)
   playDefeatSound() {
-    if (this.isMuted) return;
-    this.init();
-    if (!this.audioCtx) return;
-
-    const notes = [300, 260, 220, 150];
-    notes.forEach((freq, index) => {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-
-      osc.type = 'sawtooth';
-      osc.frequency.value = freq;
-
-      const startTime = this.audioCtx.currentTime + index * 0.18;
-      gain.gain.setValueAtTime(this.sfxVolume * 0.7, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.25);
-
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-
-      osc.start(startTime);
-      osc.stop(startTime + 0.25);
-    });
-  }
-
-  toggleMute(status) {
-    this.isMuted = status;
+    this.stopBGM();
+    if (!this.isBGMMuted) {
+      this.tracks.gameOver.currentTime = 0;
+      this.tracks.gameOver.play().catch(() => {});
+    }
   }
 }
 

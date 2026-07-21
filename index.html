@@ -136,11 +136,27 @@
         <label for="settings-name" style="text-align: left; font-size: 14px; color: #aaa;">Change Fighter's Name:</label>
         <input type="text" id="settings-name" placeholder="Enter new name..." autocomplete="off">
         
-        <div style="margin: 15px 0; background: #222; padding: 10px; border-radius: 6px; border: 1px solid #444;">
-          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: #ddd; font-size: 14px;">
+        <!-- AUDIO & THEME CONTROLS PANEL -->
+        <div style="margin: 15px 0; background: #222; padding: 12px; border-radius: 6px; border: 1px solid #444;">
+          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: #ddd; font-size: 14px; margin-bottom: 10px;">
             <span>🔊 Sound Effects (SFX):</span>
             <input type="checkbox" id="setting-sfx-toggle" checked style="width: 20px; height: 20px; cursor: pointer;">
           </label>
+
+          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: #ddd; font-size: 14px; margin-bottom: 12px;">
+            <span>🎵 Background Music (BGM):</span>
+            <input type="checkbox" id="setting-bgm-toggle" style="width: 20px; height: 20px; cursor: pointer;">
+          </label>
+
+          <label style="display: block; color: #aaa; font-size: 13px; text-align: left; margin-bottom: 4px;">
+            🖼️ Arena Theme (Background):
+          </label>
+          <select id="setting-theme-select" style="width: 100%; padding: 6px; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px; cursor: pointer;">
+            <option value="theme-default">Dark Arena (Classic)</option>
+            <option value="theme-cyberpunk">Cyberpunk Neon 🌆</option>
+            <option value="theme-dojo">Traditional Dojo 🥋</option>
+            <option value="theme-dungeon">Dungeon Pit 💀</option>
+          </select>
         </div>
 
         <button id="btn-save-settings">Save Changes 💾</button>

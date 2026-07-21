@@ -1,6 +1,7 @@
 import { gameState, loadState, updateState, getPlayerStats } from './state.js';
 import { combatState, executeCombatTurn, logMessage, updateHPBars, validateTurnReadiness, enemyProfiles, getEnemyStats } from './combat.js';
 import { ARTIFACTS_DATABASE } from './artifacts.js';
+import { soundManager } from './audio.js';
 
 // Допоміжна функція для формування підказки (Tooltip)
 function getArtifactTooltip(artifact) {
@@ -17,10 +18,26 @@ function showScreen(screenId) {
     activeScreen.classList.remove('hidden');
     updateState({ currentScreen: screenId });
   }
+
+  // --- Автоматичне перемикання треків при зміні екранів ---
+  if (screenId === 'screen-home' || screenId === 'screen-settings') {
+    soundManager.playBGM('menu');
+  } else if (screenId === 'screen-enemy-select' || screenId === 'screen-character') {
+    soundManager.playBGM('select');
+  } else if (screenId === 'screen-battle') {
+    const isBoss = combatState.currentEnemyName === 'Boss';
+    soundManager.playBGM(isBoss ? 'boss' : 'battle');
+  }
 }
 
 function init() {
   loadState();
+
+  // Відновлення збереженої теми оформлення
+  if (gameState.theme) {
+    document.body.className = gameState.theme;
+  }
+
   if (gameState.playerName) {
     updateUI();
     showScreen(gameState.currentScreen === 'screen-registration' ? 'screen-home' : gameState.currentScreen);
@@ -28,7 +45,7 @@ function init() {
     showScreen('screen-registration');
   }
   setupEventListeners();
-  setupKeyboardControls(); // Підключаємо обробку клавіатури
+  setupKeyboardControls();
 }
 
 function updateUI() {
@@ -63,6 +80,12 @@ function updateUI() {
     if (charBioEl && heroProfile) {
       charBioEl.textContent = heroProfile.bio;
     }
+  }
+
+  // Оновлення значення вибору теми у налаштуваннях
+  const themeSelect = document.getElementById('setting-theme-select');
+  if (themeSelect && gameState.theme) {
+    themeSelect.value = gameState.theme;
   }
 
   renderPlayerAvatarPicker();
@@ -365,28 +388,24 @@ function toggleDefendZone(zone) {
   checkTurnReadiness();
 }
 
-// --- KEYBOARD CONTROLS SYSTEM (Layout-independent using e.code) ---
+// --- KEYBOARD CONTROLS SYSTEM ---
 function setupKeyboardControls() {
   document.addEventListener('keydown', (e) => {
-    // 1. Enter у формі реєстрації
     if (e.key === 'Enter' && !document.getElementById('screen-registration').classList.contains('hidden')) {
       document.getElementById('btn-register').click();
       return;
     }
 
-    // 2. Enter у формі налаштувань
     if (e.key === 'Enter' && !document.getElementById('screen-settings').classList.contains('hidden')) {
       document.getElementById('btn-save-settings').click();
       return;
     }
 
-    // 3. Клавіатура в бою (тільки якщо активний screen-battle)
     const isBattleScreen = !document.getElementById('screen-battle').classList.contains('hidden');
     if (!isBattleScreen) return;
 
     const zones = ['Head', 'Neck', 'Body', 'Belly', 'Legs'];
 
-    // Цифри 1-5 (працює як для верхнього ряду Digit1-Digit5, так і для Numpad1-Numpad5)
     const digitMap = {
       'Digit1': 0, 'Numpad1': 0,
       'Digit2': 1, 'Numpad2': 1,
@@ -399,7 +418,6 @@ function setupKeyboardControls() {
       toggleAttackZone(zones[digitMap[e.code]]);
     }
 
-    // Фізичні клавіші Q, W, E, R, T для захисту (не залежить від розкладки мови!)
     const defendCodeMap = {
       'KeyQ': 0,
       'KeyW': 1,
@@ -412,7 +430,6 @@ function setupKeyboardControls() {
       toggleDefendZone(zones[defendCodeMap[e.code]]);
     }
 
-    // Space або Enter -> EXECUTE TURN
     if (e.code === 'Space' || e.code === 'Enter') {
       const btnEndTurn = document.getElementById('btn-end-turn');
       if (btnEndTurn && !btnEndTurn.disabled) {
@@ -428,6 +445,7 @@ function setupEventListeners() {
     const name = document.getElementById('reg-name').value.trim();
     if (!name) return alert("Please enter your fighter's name!");
     updateState({ playerName: name });
+    soundManager.playBGM('menu'); // Запуск BGM при першому підтвердженні
     updateUI();
     showScreen('screen-home');
   });
@@ -455,6 +473,29 @@ function setupEventListeners() {
     updateUI();
     alert("Changes saved successfully! 💾");
   });
+
+  // --- AUDIO & THEME CONTROLS IN SETTINGS ---
+  const sfxToggle = document.getElementById('setting-sfx-toggle');
+  if (sfxToggle) {
+    sfxToggle.addEventListener('change', (e) => {
+      soundManager.toggleSFX(!e.target.checked);
+    });
+  }
+
+  const bgmToggle = document.getElementById('setting-bgm-toggle');
+  if (bgmToggle) {
+    bgmToggle.addEventListener('change', (e) => {
+      soundManager.toggleBGM(!e.target.checked);
+    });
+  }
+
+  const themeSelect = document.getElementById('setting-theme-select');
+  if (themeSelect) {
+    themeSelect.addEventListener('change', (e) => {
+      document.body.className = e.target.value;
+      updateState({ theme: e.target.value });
+    });
+  }
 
   document.getElementById('btn-reset-game').addEventListener('click', () => {
     if (confirm("Are you sure you want to reset all progress?")) {
@@ -534,27 +575,27 @@ function setupEventListeners() {
           <div class="zones-columns-wrapper">
             <div class="zone-column">
               <span style="color: #ff4757; font-size: 12px; font-weight: bold; margin-bottom: 5px;">⚡ ATTACK</span>
-              <button type="button" class="btn-zone-attack" data-zone="Head">Head 🪖</button>
-              <button type="button" class="btn-zone-attack" data-zone="Neck">Neck 🎯</button>
-              <button type="button" class="btn-zone-attack" data-zone="Body">Body 🥋</button>
-              <button type="button" class="btn-zone-attack" data-zone="Belly">Belly 🔥</button>
-              <button type="button" class="btn-zone-attack" data-zone="Legs">Legs 🥾</button>
+              <button type="button" class="btn-zone-attack" data-zone="Head">[1] Head 🪖</button>
+              <button type="button" class="btn-zone-attack" data-zone="Neck">[2] Neck 🎯</button>
+              <button type="button" class="btn-zone-attack" data-zone="Body">[3] Body 🥋</button>
+              <button type="button" class="btn-zone-attack" data-zone="Belly">[4] Belly 🔥</button>
+              <button type="button" class="btn-zone-attack" data-zone="Legs">[5] Legs 🥾</button>
             </div>
             <div class="zone-divider" style="width: 1px; background: #444; align-self: stretch;"></div>
             <div class="zone-column">
               <span style="color: #2ed573; font-size: 12px; font-weight: bold; margin-bottom: 5px;">🛡️ DEFEND</span>
-              <button type="button" class="btn-zone-defend" data-zone="Head">Head 🪖</button>
-              <button type="button" class="btn-zone-defend" data-zone="Neck">Neck 🎯</button>
-              <button type="button" class="btn-zone-defend" data-zone="Body">Body 🥋</button>
-              <button type="button" class="btn-zone-defend" data-zone="Belly">Belly 🔥</button>
-              <button type="button" class="btn-zone-defend" data-zone="Legs">Legs 🥾</button>
+              <button type="button" class="btn-zone-defend" data-zone="Head">[Q] Head 🪖</button>
+              <button type="button" class="btn-zone-defend" data-zone="Neck">[W] Neck 🎯</button>
+              <button type="button" class="btn-zone-defend" data-zone="Body">[E] Body 🥋</button>
+              <button type="button" class="btn-zone-defend" data-zone="Belly">[R] Belly 🔥</button>
+              <button type="button" class="btn-zone-defend" data-zone="Legs">[T] Legs 🥾</button>
             </div>
           </div>
           <div id="selected-zones-indicator" style="margin: 5px 0; font-size: 12px; font-weight: bold; color: #eccc68; background: #222; padding: 4px 10px; border-radius: 4px; border: 1px solid #444; text-align: center; width: 90%;">
             🎯 A: <span id="indicator-attack" style="color: #ff4757;">None</span> | 🛡️ D: <span id="indicator-defend" style="color: #2ed573;">None</span>
           </div>
           <button id="btn-end-turn" class="btn-primary" disabled style="margin-top: 10px; width: 100%; max-width: 200px; opacity: 0.5; cursor: not-allowed; background-color: #eccc68; color: #000; padding: 8px;">
-            EXECUTE TURN ⚔️
+            EXECUTE TURN ⚔️ [Space]
           </button>
         </div>
         <div class="fighter-card enemy-side">
