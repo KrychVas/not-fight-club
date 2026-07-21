@@ -20,7 +20,7 @@
       <h2>Fighter Registration</h2>
       <div class="form-group">
         <input type="text" id="reg-name" placeholder="Enter your fighter's name..." autocomplete="off">
-        <button id="btn-register">Enter the Club</button>
+        <button id="btn-register">Enter the Club [Enter]</button>
       </div>
     </section>
 
@@ -83,7 +83,7 @@
       <button class="btn-back btn-enemy-select-back" style="background-color: #555; margin-top: 10px; width: 100%;">Back to Menu</button>
     </section>
 
-<!-- SCREEN 3: CHARACTER CARD -->
+    <!-- SCREEN 3: CHARACTER CARD -->
     <section id="screen-character" class="screen hidden">
       <h2>Character Selection</h2>
 
@@ -95,7 +95,7 @@
         </div>
       </div>
 
-      <!-- SELECTED HERO PREVIEW (Початково приховано display: none) -->
+      <!-- SELECTED HERO PREVIEW -->
       <div id="selected-player-preview" style="display: none; margin-bottom: 15px;">
         <!-- PROFILE DISPLAY -->
         <div class="character-profile" style="text-align: center; margin-bottom: 15px;">
@@ -135,6 +135,14 @@
       <div class="form-group">
         <label for="settings-name" style="text-align: left; font-size: 14px; color: #aaa;">Change Fighter's Name:</label>
         <input type="text" id="settings-name" placeholder="Enter new name..." autocomplete="off">
+        
+        <div style="margin: 15px 0; background: #222; padding: 10px; border-radius: 6px; border: 1px solid #444;">
+          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: #ddd; font-size: 14px;">
+            <span>🔊 Sound Effects (SFX):</span>
+            <input type="checkbox" id="setting-sfx-toggle" checked style="width: 20px; height: 20px; cursor: pointer;">
+          </label>
+        </div>
+
         <button id="btn-save-settings">Save Changes 💾</button>
         <button id="btn-reset-game" style="background-color: #3e3e3e; margin-top: 10px;">Reset Progress 🔄</button>
         <button class="btn-back btn-settings-back" style="background-color: #555; margin-top: 20px;">Back to Menu</button>
@@ -162,22 +170,22 @@
           <div class="zones-columns-wrapper">
             <div class="zone-column">
               <span style="color: #ff4757; font-size: 12px; font-weight: bold; margin-bottom: 5px;">⚡ ATTACK</span>
-              <button type="button" class="btn-zone-attack" data-zone="Head">Head 🪖</button>
-              <button type="button" class="btn-zone-attack" data-zone="Neck">Neck 🎯</button>
-              <button type="button" class="btn-zone-attack" data-zone="Body">Body 🥋</button>
-              <button type="button" class="btn-zone-attack" data-zone="Belly">Belly 🔥</button>
-              <button type="button" class="btn-zone-attack" data-zone="Legs">Legs 🥾</button>
+              <button type="button" class="btn-zone-attack" data-zone="Head">[1] Head 🪖</button>
+              <button type="button" class="btn-zone-attack" data-zone="Neck">[2] Neck 🎯</button>
+              <button type="button" class="btn-zone-attack" data-zone="Body">[3] Body 🥋</button>
+              <button type="button" class="btn-zone-attack" data-zone="Belly">[4] Belly 🔥</button>
+              <button type="button" class="btn-zone-attack" data-zone="Legs">[5] Legs 🥾</button>
             </div>
 
             <div class="zone-divider" style="width: 1px; background: #444; align-self: stretch;"></div>
 
             <div class="zone-column">
               <span style="color: #2ed573; font-size: 12px; font-weight: bold; margin-bottom: 5px;">🛡️ DEFEND</span>
-              <button type="button" class="btn-zone-defend" data-zone="Head">Head 🪖</button>
-              <button type="button" class="btn-zone-defend" data-zone="Neck">Neck 🎯</button>
-              <button type="button" class="btn-zone-defend" data-zone="Body">Body 🥋</button>
-              <button type="button" class="btn-zone-defend" data-zone="Belly">Belly 🔥</button>
-              <button type="button" class="btn-zone-defend" data-zone="Legs">Legs 🥾</button>
+              <button type="button" class="btn-zone-defend" data-zone="Head">[Q] Head 🪖</button>
+              <button type="button" class="btn-zone-defend" data-zone="Neck">[W] Neck 🎯</button>
+              <button type="button" class="btn-zone-defend" data-zone="Body">[E] Body 🥋</button>
+              <button type="button" class="btn-zone-defend" data-zone="Belly">[R] Belly 🔥</button>
+              <button type="button" class="btn-zone-defend" data-zone="Legs">[T] Legs 🥾</button>
             </div>
           </div>
 
@@ -186,7 +194,7 @@
           </div>
 
           <button id="btn-end-turn" class="btn-primary" disabled style="margin-top: 10px; width: 100%; max-width: 200px; opacity: 0.5; cursor: not-allowed; background-color: #eccc68; color: #000; padding: 8px;">
-            EXECUTE TURN ⚔️
+            EXECUTE TURN ⚔️ [Space]
           </button>
         </div>
 

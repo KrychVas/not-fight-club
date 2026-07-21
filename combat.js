@@ -1,5 +1,6 @@
 import { gameState, updateState, getPlayerStats } from './state.js';
 import { ARTIFACTS_DATABASE } from './artifacts.js';
+import { soundManager } from './audio.js';
 
 export const enemyProfiles = {
   'Spider':  { baseDamage: 12, attacksCount: 2, defendsCount: 1, bio: 'A swift and venomous predator.' },
@@ -32,7 +33,6 @@ export function getEnemyStats() {
     Object.values(combatState.enemyEquipment).forEach(artifactId => {
       const art = ARTIFACTS_DATABASE[artifactId];
       if (art) {
-        // Підтримка обох форматів статів (прямих та nested)
         const hp = art.stats?.hp ?? art.bonusHP ?? 0;
         const dmg = art.stats?.damage ?? art.bonusDamage ?? 0;
 
@@ -112,6 +112,7 @@ function getRandomZones(count) {
   return result;
 }
 
+// Функція анімації удару бійця
 function triggerHitAnimation(isPlayer, baseAvatarPath) {
   const imgElement = document.getElementById(isPlayer ? 'arena-player-avatar' : 'arena-enemy-avatar');
   if (!imgElement) return;
@@ -124,6 +125,14 @@ function triggerHitAnimation(isPlayer, baseAvatarPath) {
   setTimeout(() => {
     imgElement.src = baseAvatarPath;
   }, 1200);
+}
+
+// Ефект трясіння екрана
+function triggerScreenShake() {
+  const battleScreen = document.getElementById('screen-battle');
+  if (!battleScreen) return;
+  battleScreen.classList.add('shake-fx');
+  setTimeout(() => battleScreen.classList.remove('shake-fx'), 300);
 }
 
 export function executeCombatTurn(onBattleEndCallback) {
@@ -139,11 +148,14 @@ export function executeCombatTurn(onBattleEndCallback) {
   const playerAvatarBase = gameState.playerAvatar || 'assets/avatars/ren.gif';
   const enemyAvatarBase = `assets/avatars/${combatState.currentEnemyName.toLowerCase()}.gif`;
 
+  let hasHitInTurn = false;
+
   // 1. Атака Гравця
   const isPlayerCrit = Math.random() < 0.15;
   const isEnemyBlockingPlayer = enemyDefends.includes(combatState.selectedAttackZone);
 
   if (isEnemyBlockingPlayer && !isPlayerCrit) {
+    soundManager.playBlockSound();
     logMessage(`🛡️ ${combatState.currentEnemyName} successfully BLOCKED ${gameState.playerName}'s attack on ${combatState.selectedAttackZone}!`, 'enemy');
   } else {
     let damage = playerBaseDmg;
@@ -152,18 +164,23 @@ export function executeCombatTurn(onBattleEndCallback) {
       damage = Math.floor(damage * 1.5);
       critText = `✨ CRITICAL STRIKE! Pierced through block! `;
     }
+    
+    soundManager.playHitSound(isPlayerCrit);
+    hasHitInTurn = true;
+
     combatState.enemyHP = Math.max(0, combatState.enemyHP - damage);
     logMessage(`💥 ${gameState.playerName} hits ${combatState.currentEnemyName} in the ${combatState.selectedAttackZone} for ${damage} HP! ${critText}`, 'player');
     
     triggerHitAnimation(false, enemyAvatarBase);
   }
 
-  // 2. Атаки Ворога (з урахуванням екіпіровки)
+  // 2. Атаки Ворога
   enemyAttacks.forEach(attackZone => {
     const isEnemyCrit = Math.random() < 0.15;
     const isPlayerBlockingEnemy = combatState.selectedDefendZones.includes(attackZone);
 
     if (isPlayerBlockingEnemy && !isEnemyCrit) {
+      soundManager.playBlockSound();
       logMessage(`🛡️ ${gameState.playerName} successfully BLOCKED ${combatState.currentEnemyName}'s attack on ${attackZone}!`, 'player');
     } else {
       let damage = enemyStats.totalDamage;
@@ -172,12 +189,20 @@ export function executeCombatTurn(onBattleEndCallback) {
         damage = Math.floor(damage * 1.5);
         critText = `✨ CRITICAL STRIKE! Pierced through block! `;
       }
+
+      soundManager.playHitSound(isEnemyCrit);
+      hasHitInTurn = true;
+
       combatState.playerHP = Math.max(0, combatState.playerHP - damage);
       logMessage(`💥 ${combatState.currentEnemyName} hits ${gameState.playerName} in the ${attackZone} for ${damage} HP! ${critText}`, 'enemy');
       
       triggerHitAnimation(true, playerAvatarBase);
     }
   });
+
+  if (hasHitInTurn) {
+    triggerScreenShake();
+  }
 
   updateHPBars();
 
@@ -190,10 +215,12 @@ export function executeCombatTurn(onBattleEndCallback) {
 
   // 3. Перевірка результату бою
   if (combatState.playerHP <= 0 && combatState.enemyHP <= 0) {
+    soundManager.playDefeatSound();
     logMessage(`🤝 DRAW! Both fighters knocked each other out!`, 'system');
     onBattleEndCallback(false);
   } 
   else if (combatState.enemyHP <= 0) {
+    soundManager.playVictorySound();
     logMessage(`🏆 VICTORY! ${gameState.playerName} defeated ${combatState.currentEnemyName}!`, 'system');
     
     let baseName = 'ren';
@@ -219,6 +246,7 @@ export function executeCombatTurn(onBattleEndCallback) {
     onBattleEndCallback(true);
   } 
   else if (combatState.playerHP <= 0) {
+    soundManager.playDefeatSound();
     logMessage(`💀 DEFEATED! ${combatState.currentEnemyName} won this battle.`, 'system');
     
     const enemyNameLower = combatState.currentEnemyName.toLowerCase();

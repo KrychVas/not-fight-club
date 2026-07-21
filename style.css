@@ -417,3 +417,34 @@ label {
   opacity: 0.4;
   border-color: #2ed573;
 }
+
+/* --- СТИЛІЗАЦІЯ СКРОЛБАРА ДЛЯ БОЙОВОГО ЛОГУ --- */
+
+/* Ширина скролбара (для Chrome, Edge, Safari) */
+#battle-log::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Фон доріжки скролбара */
+#battle-log::-webkit-scrollbar-track {
+  background: #111;
+  border-radius: 4px;
+}
+
+/* Сам бігунок (ползунок) */
+#battle-log::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+  border: 1px solid #222;
+}
+
+/* Ефект при наведенні на бігунок */
+#battle-log::-webkit-scrollbar-thumb:hover {
+  background: #ff4757; /* Або #eccc68 / #2ed573 залежно від бажаного акценту */
+}
+
+/* Підтримка для Firefox */
+#battle-log {
+  scrollbar-width: thin;
+  scrollbar-color: #444 #111;
+}
