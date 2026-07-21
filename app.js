@@ -28,6 +28,7 @@ function init() {
     showScreen('screen-registration');
   }
   setupEventListeners();
+  setupKeyboardControls(); // Підключаємо обробку клавіатури
 }
 
 function updateUI() {
@@ -76,7 +77,6 @@ function renderPlayerAvatarPicker() {
   if (!container) return;
   container.innerHTML = '';
 
-  // Перевірка: якщо аватар ще НЕ обрано, приховуємо нижній блок повністю (як на Другому скріншоті)
   if (playerPreviewBox) {
     if (!gameState.playerAvatar) {
       playerPreviewBox.style.display = 'none';
@@ -107,14 +107,10 @@ function renderPlayerAvatarPicker() {
     `;
 
     card.addEventListener('click', () => {
-      // Підсвічуємо лише обрану картку
       document.querySelectorAll('.player-card-option').forEach(c => c.style.borderColor = '#444');
       card.style.borderColor = '#2ed573';
 
-      // Оновлюємо стан гравця
       updateState({ playerAvatar: char.avatar });
-      
-      // Оновлюємо UI та робимо прев'ю-блок видимим
       updateUI();
       if (playerPreviewBox) {
         playerPreviewBox.style.display = 'block';
@@ -339,6 +335,94 @@ function checkTurnReadiness() {
   updateZonesIndicator();
 }
 
+// Допоміжні функції кліку на зони атаки та захисту
+function toggleAttackZone(zone) {
+  const btn = document.querySelector(`.btn-zone-attack[data-zone="${zone}"]`);
+  if (!btn) return;
+  if (combatState.selectedAttackZone === zone) {
+    combatState.selectedAttackZone = '';
+    btn.classList.remove('selected-attack');
+  } else {
+    document.querySelectorAll('.btn-zone-attack').forEach(b => b.classList.remove('selected-attack'));
+    combatState.selectedAttackZone = zone;
+    btn.classList.add('selected-attack');
+  }
+  checkTurnReadiness();
+}
+
+function toggleDefendZone(zone) {
+  const btn = document.querySelector(`.btn-zone-defend[data-zone="${zone}"]`);
+  if (!btn) return;
+  const idx = combatState.selectedDefendZones.indexOf(zone);
+  if (idx > -1) {
+    combatState.selectedDefendZones.splice(idx, 1);
+    btn.classList.remove('selected-defend');
+  } else {
+    if (combatState.selectedDefendZones.length >= 2) return;
+    combatState.selectedDefendZones.push(zone);
+    btn.classList.add('selected-defend');
+  }
+  checkTurnReadiness();
+}
+
+// --- KEYBOARD CONTROLS SYSTEM (Layout-independent using e.code) ---
+function setupKeyboardControls() {
+  document.addEventListener('keydown', (e) => {
+    // 1. Enter у формі реєстрації
+    if (e.key === 'Enter' && !document.getElementById('screen-registration').classList.contains('hidden')) {
+      document.getElementById('btn-register').click();
+      return;
+    }
+
+    // 2. Enter у формі налаштувань
+    if (e.key === 'Enter' && !document.getElementById('screen-settings').classList.contains('hidden')) {
+      document.getElementById('btn-save-settings').click();
+      return;
+    }
+
+    // 3. Клавіатура в бою (тільки якщо активний screen-battle)
+    const isBattleScreen = !document.getElementById('screen-battle').classList.contains('hidden');
+    if (!isBattleScreen) return;
+
+    const zones = ['Head', 'Neck', 'Body', 'Belly', 'Legs'];
+
+    // Цифри 1-5 (працює як для верхнього ряду Digit1-Digit5, так і для Numpad1-Numpad5)
+    const digitMap = {
+      'Digit1': 0, 'Numpad1': 0,
+      'Digit2': 1, 'Numpad2': 1,
+      'Digit3': 2, 'Numpad3': 2,
+      'Digit4': 3, 'Numpad4': 3,
+      'Digit5': 4, 'Numpad5': 4
+    };
+
+    if (e.code in digitMap) {
+      toggleAttackZone(zones[digitMap[e.code]]);
+    }
+
+    // Фізичні клавіші Q, W, E, R, T для захисту (не залежить від розкладки мови!)
+    const defendCodeMap = {
+      'KeyQ': 0,
+      'KeyW': 1,
+      'KeyE': 2,
+      'KeyR': 3,
+      'KeyT': 4
+    };
+
+    if (e.code in defendCodeMap) {
+      toggleDefendZone(zones[defendCodeMap[e.code]]);
+    }
+
+    // Space або Enter -> EXECUTE TURN
+    if (e.code === 'Space' || e.code === 'Enter') {
+      const btnEndTurn = document.getElementById('btn-end-turn');
+      if (btnEndTurn && !btnEndTurn.disabled) {
+        e.preventDefault();
+        btnEndTurn.click();
+      }
+    }
+  });
+}
+
 function setupEventListeners() {
   document.getElementById('btn-register').addEventListener('click', () => {
     const name = document.getElementById('reg-name').value.trim();
@@ -354,7 +438,6 @@ function setupEventListeners() {
   });
 
   document.getElementById('btn-to-character').addEventListener('click', () => {
-    // При переході в екран Character: скидаємо або показуємо блок відповідно до стану
     const playerPreviewBox = document.getElementById('selected-player-preview');
     if (playerPreviewBox) {
       playerPreviewBox.style.display = gameState.playerAvatar ? 'block' : 'none';
@@ -413,32 +496,13 @@ function setupEventListeners() {
 
   document.querySelectorAll('.btn-zone-attack').forEach(button => {
     button.addEventListener('click', () => {
-      const zone = button.getAttribute('data-zone');
-      if (combatState.selectedAttackZone === zone) {
-        combatState.selectedAttackZone = '';
-        button.classList.remove('selected-attack');
-      } else {
-        document.querySelectorAll('.btn-zone-attack').forEach(btn => btn.classList.remove('selected-attack'));
-        combatState.selectedAttackZone = zone;
-        button.classList.add('selected-attack');
-      }
-      checkTurnReadiness();
+      toggleAttackZone(button.getAttribute('data-zone'));
     });
   });
 
   document.querySelectorAll('.btn-zone-defend').forEach(button => {
     button.addEventListener('click', () => {
-      const zone = button.getAttribute('data-zone');
-      const idx = combatState.selectedDefendZones.indexOf(zone);
-      if (idx > -1) {
-        combatState.selectedDefendZones.splice(idx, 1);
-        button.classList.remove('selected-defend');
-      } else {
-        if (combatState.selectedDefendZones.length >= 2) return;
-        combatState.selectedDefendZones.push(zone);
-        button.classList.add('selected-defend');
-      }
-      checkTurnReadiness();
+      toggleDefendZone(button.getAttribute('data-zone'));
     });
   });
 
