@@ -1,5 +1,5 @@
 import { gameState, loadState, updateState, getPlayerStats } from './state.js';
-import { combatState, executeCombatTurn, logMessage, updateHPBars, validateTurnReadiness, enemyProfiles, getEnemyStats } from './combat.js';
+import { combatState, executeCombatTurn, logMessage, updateHPBars, validateTurnReadiness, enemyProfiles, getEnemyStats, saveCombatState, clearCombatState } from './combat.js';
 import { ARTIFACTS_DATABASE } from './artifacts.js';
 import { soundManager } from './audio.js';
 
@@ -38,14 +38,54 @@ function init() {
     document.body.className = gameState.theme;
   }
 
+  setupEventListeners();
+  setupKeyboardControls();
+
+  // --- ПЕРЕВІРКА ТА ВІДНОВЛЕННЯ НЕЗАВЕРШЕНОГО БОЮ (Combat Persistence) ---
+  const savedCombatRaw = localStorage.getItem('active_combat_state');
+  if (savedCombatRaw && gameState.playerName) {
+    try {
+      const savedCombat = JSON.parse(savedCombatRaw);
+      if (savedCombat && savedCombat.isInBattle) {
+        // Відновлюємо стан бою
+        combatState.playerHP = savedCombat.playerHP;
+        combatState.enemyHP = savedCombat.enemyHP;
+        combatState.enemyMaxHP = savedCombat.enemyMaxHP;
+        combatState.currentEnemyName = savedCombat.currentEnemyName;
+        combatState.enemyEquipment = savedCombat.enemyEquipment || {};
+
+        updateUI();
+
+        // Заповнюємо арену даними
+        document.getElementById('arena-player-avatar').src = gameState.playerAvatar || 'assets/avatars/ren.gif';
+        document.getElementById('arena-player-name').textContent = gameState.playerName;
+        document.getElementById('arena-enemy-avatar').src = `assets/avatars/${combatState.currentEnemyName.toLowerCase()}.gif`;
+        document.getElementById('arena-enemy-name').textContent = combatState.currentEnemyName;
+
+        const battleLog = document.getElementById('battle-log');
+        if (battleLog && savedCombat.battleLogHTML) {
+          battleLog.innerHTML = savedCombat.battleLogHTML;
+          battleLog.scrollTop = battleLog.scrollHeight;
+        }
+
+        updateHPBars();
+        updateZonesIndicator();
+        showScreen('screen-battle');
+        return; // Виходимо, оскільки екран вже встановлено на бій
+      }
+    } catch (err) {
+      console.error('Failed to restore combat state:', err);
+      clearCombatState();
+    }
+  }
+
+  // Звичайне відновлення стартового екрана
   if (gameState.playerName) {
     updateUI();
     showScreen(gameState.currentScreen === 'screen-registration' ? 'screen-home' : gameState.currentScreen);
   } else {
     showScreen('screen-registration');
   }
-  setupEventListeners();
-  setupKeyboardControls();
 }
 
 function updateUI() {
@@ -499,6 +539,7 @@ function setupEventListeners() {
 
   document.getElementById('btn-reset-game').addEventListener('click', () => {
     if (confirm("Are you sure you want to reset all progress?")) {
+      clearCombatState();
       localStorage.clear();
       window.location.reload();
     }
@@ -532,6 +573,9 @@ function setupEventListeners() {
     document.getElementById('battle-log').innerHTML = '';
     logMessage(`⚔️ Battle started! ${gameState.playerName} (${maxHP} HP) vs ${combatState.currentEnemyName} (${enemyStats.maxHP} HP)!`, 'system');
 
+    // Зберігаємо початковий стан бою
+    saveCombatState();
+
     showScreen('screen-battle');
   });
 
@@ -559,6 +603,8 @@ function setupEventListeners() {
   }
 
   document.querySelector('.btn-battle-back').addEventListener('click', () => {
+    clearCombatState(); // Очищаємо незавершений бій при виході
+
     const arenaContainer = document.querySelector('.arena-container');
     if (arenaContainer && arenaContainer.querySelector('.victory-screen-wrapper')) {
       const { maxHP } = getPlayerStats();

@@ -24,6 +24,28 @@ export let combatState = {
   enemyEquipment: {} // Об'єкт екіпіровки ворога: { slot: artifactId }
 };
 
+// --- COMBAT PERSISTENCE ---
+export function saveCombatState() {
+  const battleLogEl = document.getElementById('battle-log');
+  const logHTML = battleLogEl ? battleLogEl.innerHTML : '';
+
+  const activeBattleData = {
+    isInBattle: true,
+    playerHP: combatState.playerHP,
+    enemyHP: combatState.enemyHP,
+    enemyMaxHP: combatState.enemyMaxHP,
+    currentEnemyName: combatState.currentEnemyName,
+    enemyEquipment: combatState.enemyEquipment,
+    battleLogHTML: logHTML
+  };
+
+  localStorage.setItem('active_combat_state', JSON.stringify(activeBattleData));
+}
+
+export function clearCombatState() {
+  localStorage.removeItem('active_combat_state');
+}
+
 export function getEnemyStats() {
   const profile = enemyProfiles[combatState.currentEnemyName] || { baseDamage: 15 };
   let bonusHP = 0;
@@ -213,13 +235,18 @@ export function executeCombatTurn(onBattleEndCallback) {
   });
   validateTurnReadiness();
 
+  // --- ЗБЕРЕЖЕННЯ СТАНУ БОЮ ПІСЛЯ ХОДУ ---
+  saveCombatState();
+
   // 3. Перевірка результату бою
   if (combatState.playerHP <= 0 && combatState.enemyHP <= 0) {
+    clearCombatState(); // Очищаємо стан, бій завершено
     soundManager.playDefeatSound();
     logMessage(`🤝 DRAW! Both fighters knocked each other out!`, 'system');
     onBattleEndCallback(false);
   } 
   else if (combatState.enemyHP <= 0) {
+    clearCombatState(); // Очищаємо стан, бій завершено
     soundManager.playVictorySound();
     logMessage(`🏆 VICTORY! ${gameState.playerName} defeated ${combatState.currentEnemyName}!`, 'system');
     
@@ -246,6 +273,7 @@ export function executeCombatTurn(onBattleEndCallback) {
     onBattleEndCallback(true);
   } 
   else if (combatState.playerHP <= 0) {
+    clearCombatState(); // Очищаємо стан, бій завершено
     soundManager.playDefeatSound();
     logMessage(`💀 DEFEATED! ${combatState.currentEnemyName} won this battle.`, 'system');
     
