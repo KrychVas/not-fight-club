@@ -26,7 +26,6 @@ export let combatState = {
 
 // --- FLOATING TEXT (VFX) SYSTEM ---
 export function spawnFloatingText(targetSide, text, type = 'damage') {
-  // targetSide: 'player' або 'enemy'
   const cardSelector = targetSide === 'player' ? '.player-side' : '.enemy-side';
   const targetCard = document.querySelector(cardSelector);
   
@@ -36,7 +35,6 @@ export function spawnFloatingText(targetSide, text, type = 'damage') {
   floatingEl.className = `floating-damage ${type}`;
   floatingEl.textContent = text;
 
-  // Рандомний зсув X, щоб випливаючі цифри не накладалися при серіях ударів
   const randomOffsetX = (Math.random() - 0.5) * 40;
   floatingEl.style.marginLeft = `${randomOffsetX}px`;
 
@@ -218,6 +216,10 @@ export function executeCombatTurn(onBattleEndCallback) {
     hasHitInTurn = true;
 
     combatState.enemyHP = Math.max(0, combatState.enemyHP - damage);
+    
+    // 💡 Оновлюємо HP bar ворога негайно після завдання шкоди
+    updateHPBars();
+    
     logMessage(`💥 ${gameState.playerName} hits ${combatState.currentEnemyName} in the ${combatState.selectedAttackZone} for ${damage} HP! ${critText}`, 'player');
     
     triggerHitAnimation(false, enemyAvatarBase);
@@ -247,6 +249,10 @@ export function executeCombatTurn(onBattleEndCallback) {
       hasHitInTurn = true;
 
       combatState.playerHP = Math.max(0, combatState.playerHP - damage);
+      
+      // 💡 Оновлюємо HP bar гравця негайно після завдання шкоди
+      updateHPBars();
+      
       logMessage(`💥 ${combatState.currentEnemyName} hits ${gameState.playerName} in the ${attackZone} for ${damage} HP! ${critText}`, 'enemy');
       
       triggerHitAnimation(true, playerAvatarBase);
@@ -257,6 +263,7 @@ export function executeCombatTurn(onBattleEndCallback) {
     triggerScreenShake();
   }
 
+  // Фінальне підтвердження оновлення графіки інтерфейсу
   updateHPBars();
 
   combatState.selectedAttackZone = '';
@@ -271,13 +278,13 @@ export function executeCombatTurn(onBattleEndCallback) {
 
   // 3. Перевірка результату бою
   if (combatState.playerHP <= 0 && combatState.enemyHP <= 0) {
-    clearCombatState(); // Очищаємо стан, бій завершено
+    clearCombatState();
     soundManager.playDefeatSound();
     logMessage(`🤝 DRAW! Both fighters knocked each other out!`, 'system');
     onBattleEndCallback(false);
   } 
   else if (combatState.enemyHP <= 0) {
-    clearCombatState(); // Очищаємо стан, бій завершено
+    clearCombatState();
     soundManager.playVictorySound();
     logMessage(`🏆 VICTORY! ${gameState.playerName} defeated ${combatState.currentEnemyName}!`, 'system');
     
@@ -304,7 +311,7 @@ export function executeCombatTurn(onBattleEndCallback) {
     onBattleEndCallback(true);
   } 
   else if (combatState.playerHP <= 0) {
-    clearCombatState(); // Очищаємо стан, бій завершено
+    clearCombatState();
     soundManager.playDefeatSound();
     logMessage(`💀 DEFEATED! ${combatState.currentEnemyName} won this battle.`, 'system');
     
