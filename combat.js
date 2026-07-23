@@ -24,6 +24,29 @@ export let combatState = {
   enemyEquipment: {} // Об'єкт екіпіровки ворога: { slot: artifactId }
 };
 
+// --- FLOATING TEXT (VFX) SYSTEM ---
+export function spawnFloatingText(targetSide, text, type = 'damage') {
+  // targetSide: 'player' або 'enemy'
+  const cardSelector = targetSide === 'player' ? '.player-side' : '.enemy-side';
+  const targetCard = document.querySelector(cardSelector);
+  
+  if (!targetCard) return;
+
+  const floatingEl = document.createElement('div');
+  floatingEl.className = `floating-damage ${type}`;
+  floatingEl.textContent = text;
+
+  // Рандомний зсув X, щоб випливаючі цифри не накладалися при серіях ударів
+  const randomOffsetX = (Math.random() - 0.5) * 40;
+  floatingEl.style.marginLeft = `${randomOffsetX}px`;
+
+  targetCard.appendChild(floatingEl);
+
+  setTimeout(() => {
+    floatingEl.remove();
+  }, 1400);
+}
+
 // --- COMBAT PERSISTENCE ---
 export function saveCombatState() {
   const battleLogEl = document.getElementById('battle-log');
@@ -179,12 +202,16 @@ export function executeCombatTurn(onBattleEndCallback) {
   if (isEnemyBlockingPlayer && !isPlayerCrit) {
     soundManager.playBlockSound();
     logMessage(`🛡️ ${combatState.currentEnemyName} successfully BLOCKED ${gameState.playerName}'s attack on ${combatState.selectedAttackZone}!`, 'enemy');
+    spawnFloatingText('enemy', '🛡️ BLOCKED', 'blocked');
   } else {
     let damage = playerBaseDmg;
     let critText = '';
     if (isPlayerCrit) {
       damage = Math.floor(damage * 1.5);
       critText = `✨ CRITICAL STRIKE! Pierced through block! `;
+      spawnFloatingText('enemy', `💥 -${damage} CRIT!`, 'critical');
+    } else {
+      spawnFloatingText('enemy', `-${damage}`, 'damage');
     }
     
     soundManager.playHitSound(isPlayerCrit);
@@ -204,12 +231,16 @@ export function executeCombatTurn(onBattleEndCallback) {
     if (isPlayerBlockingEnemy && !isEnemyCrit) {
       soundManager.playBlockSound();
       logMessage(`🛡️ ${gameState.playerName} successfully BLOCKED ${combatState.currentEnemyName}'s attack on ${attackZone}!`, 'player');
+      spawnFloatingText('player', '🛡️ BLOCKED', 'blocked');
     } else {
       let damage = enemyStats.totalDamage;
       let critText = '';
       if (isEnemyCrit) {
         damage = Math.floor(damage * 1.5);
         critText = `✨ CRITICAL STRIKE! Pierced through block! `;
+        spawnFloatingText('player', `💥 -${damage} CRIT!`, 'critical');
+      } else {
+        spawnFloatingText('player', `-${damage}`, 'damage');
       }
 
       soundManager.playHitSound(isEnemyCrit);

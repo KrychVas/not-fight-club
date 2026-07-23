@@ -475,3 +475,75 @@ body.theme-dungeon {
 body.theme-dungeon #app-container {
   border-color: #ff4757;
 }
+
+/* Контейнер для відносного позиціонування над аватарками */
+.fighter-card {
+  position: relative;
+}
+
+/* Випливаючий текст шкоди */
+.floating-damage {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  font-weight: 900;
+  font-size: 24px;
+  pointer-events: none;
+  z-index: 100;
+  animation: floatUpFade 1.2s cubic-bezier(0.25, 1, 0.5, 1) FORWARDS;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+}
+
+/* Типи повідомлень */
+.floating-damage.damage {
+  color: #ff4757;
+}
+
+.floating-damage.critical {
+  color: #ffa502;
+  font-size: 32px;
+  animation: floatUpFadeCrit 1.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) FORWARDS;
+}
+
+.floating-damage.blocked {
+  color: #70a1ff;
+  font-size: 20px;
+}
+
+.floating-damage.miss {
+  color: #a4b0be;
+  font-size: 18px;
+}
+
+/* Ключові кадри анімацій */
+@keyframes floatUpFade {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -10px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -60px) scale(1);
+  }
+}
+
+@keyframes floatUpFadeCrit {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 15px) scale(0.5) rotate(-5deg);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(-50%, -15px) scale(1.4) rotate(3deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -80px) scale(0.9) rotate(0deg);
+  }
+}
