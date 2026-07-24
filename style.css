@@ -161,7 +161,7 @@ label {
   box-shadow: 0 0 10px rgba(255, 62, 62, 0.3);
 }
 
-/* --- АРЕНА БОЮ --- */
+/* --- АРЕНА БОЮ (ДЕСКТОП) --- */
 .arena-container {
   display: flex;
   justify-content: space-between;
@@ -181,6 +181,7 @@ label {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .fighter-card img {
@@ -219,7 +220,7 @@ label {
 
 /* --- ЗОНИ АТАКИ ТА ЗАХИСТУ --- */
 .combat-actions {
-  flex: 1.4;
+  flex: 2; /* Даємо більше місця кнопкам для широкого вигляду */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -227,13 +228,14 @@ label {
   border: 1px solid #444;
   border-radius: 8px;
   padding: 15px;
+  width: 100%;
 }
 
 .zones-columns-wrapper {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   width: 100%;
-  justify-content: center;
+  justify-content: space-between;
 }
 
 .zone-column {
@@ -247,12 +249,16 @@ label {
   background-color: #3a3a3a !important;
   color: #ffffff !important;
   border: 2px solid #555555 !important;
-  padding: 8px 10px !important;
+  padding: 10px 12px !important;
   font-size: 14px !important;
   border-radius: 6px !important;
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 6px !important;
   text-align: center;
 }
 
@@ -271,6 +277,10 @@ label {
   background-color: #2ed573 !important;
   border-color: #7bed9f !important;
   color: #ffffff !important;
+}
+
+#selected-zones-indicator {
+  width: 100% !important;
 }
 
 /* --- ЛОГ БОЮ --- */
@@ -419,31 +429,25 @@ label {
 }
 
 /* --- СТИЛІЗАЦІЯ СКРОЛБАРА ДЛЯ БОЙОВОГО ЛОГУ --- */
-
-/* Ширина скролбара (для Chrome, Edge, Safari) */
 #battle-log::-webkit-scrollbar {
   width: 8px;
 }
 
-/* Фон доріжки скролбара */
 #battle-log::-webkit-scrollbar-track {
   background: #111;
   border-radius: 4px;
 }
 
-/* Сам бігунок (ползунок) */
 #battle-log::-webkit-scrollbar-thumb {
   background: #444;
   border-radius: 4px;
   border: 1px solid #222;
 }
 
-/* Ефект при наведенні на бігунок */
 #battle-log::-webkit-scrollbar-thumb:hover {
-  background: #ff4757; /* Або #eccc68 / #2ed573 залежно від бажаного акценту */
+  background: #ff4757;
 }
 
-/* Підтримка для Firefox */
 #battle-log {
   scrollbar-width: thin;
   scrollbar-color: #444 #111;
@@ -476,11 +480,6 @@ body.theme-dungeon #app-container {
   border-color: #ff4757;
 }
 
-/* Контейнер для відносного позиціонування над аватарками */
-.fighter-card {
-  position: relative;
-}
-
 /* Випливаючий текст шкоди */
 .floating-damage {
   position: absolute;
@@ -496,7 +495,6 @@ body.theme-dungeon #app-container {
   white-space: nowrap;
 }
 
-/* Типи повідомлень */
 .floating-damage.damage {
   color: #ff4757;
 }
@@ -517,7 +515,6 @@ body.theme-dungeon #app-container {
   font-size: 18px;
 }
 
-/* Ключові кадри анімацій */
 @keyframes floatUpFade {
   0% {
     opacity: 0;
@@ -547,7 +544,7 @@ body.theme-dungeon #app-container {
     transform: translate(-50%, -80px) scale(0.9) rotate(0deg);
   }
 }
-/* Помаранчева кнопка повернення */
+
 #btn-continue-battle {
   background-color: #ff9f43 !important; 
   color: #ffffff; 
@@ -556,4 +553,108 @@ body.theme-dungeon #app-container {
 
 #btn-continue-battle:hover {
   background-color: #ff8e29 !important; 
+}
+
+/* ==========================================
+   ADAPTIVE & RESPONSIVE DESIGN (MOBILE/TABLET)
+   ========================================== */
+
+@media (max-width: 600px) {
+  body {
+    padding: 5px;
+  }
+
+  h1, h2 {
+    font-size: 1.3rem !important;
+    margin-bottom: 8px !important;
+  }
+
+  p, div {
+    font-size: 0.9rem;
+  }
+
+  /* --- ГОЛОВНИЙ ФІКС АРЕНИ ДЛЯ МОБІЛЬНИХ --- */
+  
+  .arena-container {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: space-between !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  /* 1. Гравець вгорі ліворуч */
+  .fighter-card.player-side {
+    order: 1 !important;
+    flex: 1 1 47% !important;
+    max-width: 48% !important;
+    padding: 6px !important;
+  }
+
+  /* 2. Ворог вгорі праворуч */
+  .fighter-card.enemy-side {
+    order: 2 !important;
+    flex: 1 1 47% !important;
+    max-width: 48% !important;
+    padding: 6px !important;
+  }
+
+  /* 3. Панель кнопок під бійцями на 100% ширини */
+  .combat-actions {
+    order: 3 !important;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    margin-top: 6px !important;
+  }
+
+  .fighter-card img, 
+  #arena-player-avatar, 
+  #arena-enemy-avatar {
+    width: 50px !important;
+    height: 50px !important;
+    object-fit: contain;
+  }
+
+  .fighter-name {
+    font-size: 0.85rem !important;
+    margin: 3px 0 !important;
+  }
+
+  .zones-columns-wrapper {
+    gap: 6px !important;
+  }
+
+  .btn-zone-attack, .btn-zone-defend {
+    padding: 6px 4px !important;
+    font-size: 0.75rem !important;
+  }
+
+  #player-avatar-grid, #enemy-select-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  #inventory-grid, #enemy-inventory-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .artifact-slot, .inventory-item {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  #battle-log {
+    max-height: 100px !important;
+    font-size: 0.75rem !important;
+    padding: 6px !important;
+  }
+
+  .btn-menu, .btn-primary, .btn-secondary {
+    width: 100% !important;
+    padding: 10px 8px !important;
+    font-size: 0.9rem !important;
+  }
 }
