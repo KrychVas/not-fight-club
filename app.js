@@ -1,9 +1,49 @@
 import { gameState, loadState, updateState, getPlayerStats } from './state.js';
-import { combatState, executeCombatTurn, logMessage, updateHPBars, validateTurnReadiness, enemyProfiles, getEnemyStats, saveCombatState, clearCombatState } from './combat.js';
+import { 
+  combatState, 
+  executeCombatTurn, 
+  logMessage, 
+  updateHPBars, 
+  validateTurnReadiness, 
+  enemyProfiles, 
+  getEnemyStats, 
+  saveCombatState, 
+  clearCombatState 
+} from './combat.js';
 import { ARTIFACTS_DATABASE } from './artifacts.js';
 import { soundManager } from './audio.js';
 
-// Допоміжна функція для формування підказки (Tooltip)
+// --- NAME VALIDATION HELPERS ---
+function validateAndGetPlayerName(rawName) {
+  const trimmed = rawName ? rawName.trim() : '';
+  if (!trimmed) {
+    alert("Please enter your fighter's name!");
+    return null;
+  }
+  if (trimmed.length < 2) {
+    alert("Name is too short (minimum 2 characters)!");
+    return null;
+  }
+  if (trimmed.length > 15) {
+    alert("Name is too long (maximum 15 characters)!");
+    return null;
+  }
+  return trimmed;
+}
+
+// Check active saved combat state in localStorage
+function hasSavedBattle() {
+  const saved = localStorage.getItem('active_combat_state');
+  if (!saved) return false;
+  try {
+    const parsed = JSON.parse(saved);
+    return parsed && parsed.isInBattle && parsed.playerHP > 0 && parsed.enemyHP > 0;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Helper function for tooltip formatting
 function getArtifactTooltip(artifact) {
   if (!artifact) return '';
   return `${artifact.name} (${artifact.slot.toUpperCase()})\n${artifact.description}`;
@@ -19,7 +59,7 @@ function showScreen(screenId) {
     updateState({ currentScreen: screenId });
   }
 
-  // --- Автоматичне перемикання треків при зміні екранів ---
+  // --- Automatic BGM switching on screen navigation ---
   if (screenId === 'screen-home' || screenId === 'screen-settings') {
     soundManager.playBGM('menu');
   } else if (screenId === 'screen-enemy-select' || screenId === 'screen-character') {
@@ -28,12 +68,44 @@ function showScreen(screenId) {
     const isBoss = combatState.currentEnemyName === 'Boss';
     soundManager.playBGM(isBoss ? 'boss' : 'battle');
   }
+
+  updateUI();
+}
+
+function restoreSavedBattle() {
+  const savedCombatRaw = localStorage.getItem('active_combat_state');
+  if (!savedCombatRaw) return false;
+
+  try {
+    const savedCombat = JSON.parse(savedCombatRaw);
+    if (savedCombat && savedCombat.isInBattle) {
+      combatState.playerHP = savedCombat.playerHP;
+      combatState.enemyHP = savedCombat.enemyHP;
+      combatState.enemyMaxHP = savedCombat.enemyMaxHP;
+      combatState.currentEnemyName = savedCombat.currentEnemyName;
+      combatState.enemyEquipment = savedCombat.enemyEquipment || {};
+
+      prepareBattleArenaUI();
+
+      const battleLog = document.getElementById('battle-log');
+      if (battleLog && savedCombat.battleLogHTML) {
+        battleLog.innerHTML = savedCombat.battleLogHTML;
+        battleLog.scrollTop = battleLog.scrollHeight;
+      }
+
+      showScreen('screen-battle');
+      return true;
+    }
+  } catch (err) {
+    console.error('Failed to restore combat state:', err);
+    clearCombatState();
+  }
+  return false;
 }
 
 function init() {
   loadState();
 
-  // Відновлення збереженої теми оформлення
   if (gameState.theme) {
     document.body.className = gameState.theme;
   }
@@ -41,51 +113,31 @@ function init() {
   setupEventListeners();
   setupKeyboardControls();
 
-  // --- ПЕРЕВІРКА ТА ВІДНОВЛЕННЯ НЕЗАВЕРШЕНОГО БОЮ (Combat Persistence) ---
-  const savedCombatRaw = localStorage.getItem('active_combat_state');
-  if (savedCombatRaw && gameState.playerName) {
-    try {
-      const savedCombat = JSON.parse(savedCombatRaw);
-      if (savedCombat && savedCombat.isInBattle) {
-        // Відновлюємо стан бою
-        combatState.playerHP = savedCombat.playerHP;
-        combatState.enemyHP = savedCombat.enemyHP;
-        combatState.enemyMaxHP = savedCombat.enemyMaxHP;
-        combatState.currentEnemyName = savedCombat.currentEnemyName;
-        combatState.enemyEquipment = savedCombat.enemyEquipment || {};
-
-        updateUI();
-
-        // Заповнюємо арену даними
-        document.getElementById('arena-player-avatar').src = gameState.playerAvatar || 'assets/avatars/ren.gif';
-        document.getElementById('arena-player-name').textContent = gameState.playerName;
-        document.getElementById('arena-enemy-avatar').src = `assets/avatars/${combatState.currentEnemyName.toLowerCase()}.gif`;
-        document.getElementById('arena-enemy-name').textContent = combatState.currentEnemyName;
-
-        const battleLog = document.getElementById('battle-log');
-        if (battleLog && savedCombat.battleLogHTML) {
-          battleLog.innerHTML = savedCombat.battleLogHTML;
-          battleLog.scrollTop = battleLog.scrollHeight;
-        }
-
-        updateHPBars();
-        updateZonesIndicator();
-        showScreen('screen-battle');
-        return; // Виходимо, оскільки екран вже встановлено на бій
-      }
-    } catch (err) {
-      console.error('Failed to restore combat state:', err);
-      clearCombatState();
+  // Якщо гравець був безпосередньо на екрані бою і натиснув F5 — повертаємо в бій
+  if (gameState.playerName && gameState.currentScreen === 'screen-battle') {
+    if (restoreSavedBattle()) {
+      return;
     }
   }
 
-  // Звичайне відновлення стартового екрана
+  // Якщо був на головному екрані або іншому — показуємо його
   if (gameState.playerName) {
     updateUI();
     showScreen(gameState.currentScreen === 'screen-registration' ? 'screen-home' : gameState.currentScreen);
   } else {
     showScreen('screen-registration');
   }
+}
+
+function prepareBattleArenaUI() {
+  document.getElementById('arena-player-avatar').src = gameState.playerAvatar || 'assets/avatars/ren.gif';
+  document.getElementById('arena-player-name').textContent = gameState.playerName;
+  if (combatState.currentEnemyName) {
+    document.getElementById('arena-enemy-avatar').src = `assets/avatars/${combatState.currentEnemyName.toLowerCase()}.gif`;
+    document.getElementById('arena-enemy-name').textContent = combatState.currentEnemyName;
+  }
+  updateHPBars();
+  updateZonesIndicator();
 }
 
 function updateUI() {
@@ -111,7 +163,6 @@ function updateUI() {
     currentAvatarImg.src = gameState.playerAvatar;
   }
 
-  // Відображення опису обраного героя гравця
   if (gameState.playerAvatar) {
     const avatarName = gameState.playerAvatar.split('/').pop().replace('.gif','');
     const heroNameCap = avatarName.charAt(0).toUpperCase() + avatarName.slice(1);
@@ -122,17 +173,46 @@ function updateUI() {
     }
   }
 
-  // Оновлення значення вибору теми у налаштуваннях
   const themeSelect = document.getElementById('setting-theme-select');
   if (themeSelect && gameState.theme) {
     themeSelect.value = gameState.theme;
+  }
+
+  // --- CONTINUE BATTLE BUTTON MANAGEMENT ---
+  let continueBtn = document.getElementById('btn-continue-battle');
+  const homeScreen = document.getElementById('screen-home');
+
+  if (hasSavedBattle()) {
+    if (!continueBtn && homeScreen) {
+      continueBtn = document.createElement('button');
+      continueBtn.id = 'btn-continue-battle';
+      
+      // Ті ж класи, що й у інших кнопок меню для однакового стилю
+      continueBtn.className = 'btn-primary btn-menu'; 
+      continueBtn.textContent = 'Return to Battle ⚔️';
+      
+      
+      const startBtn = document.getElementById('btn-start-battle');
+      if (startBtn && startBtn.parentNode) {
+        startBtn.parentNode.insertBefore(continueBtn, startBtn);
+      } else {
+        homeScreen.appendChild(continueBtn);
+      }
+
+      continueBtn.addEventListener('click', () => {
+        restoreSavedBattle();
+      });
+    } else if (continueBtn) {
+      continueBtn.style.display = 'block';
+    }
+  } else if (continueBtn) {
+    continueBtn.style.display = 'none';
   }
 
   renderPlayerAvatarPicker();
   renderArtifactsUI();
 }
 
-// --- PLAYER AVATAR PICKER (CHARACTER CARD) ---
 function renderPlayerAvatarPicker() {
   const container = document.getElementById('player-avatar-grid');
   const playerPreviewBox = document.getElementById('selected-player-preview');
@@ -141,11 +221,7 @@ function renderPlayerAvatarPicker() {
   container.innerHTML = '';
 
   if (playerPreviewBox) {
-    if (!gameState.playerAvatar) {
-      playerPreviewBox.style.display = 'none';
-    } else {
-      playerPreviewBox.style.display = 'block';
-    }
+    playerPreviewBox.style.display = !gameState.playerAvatar ? 'none' : 'block';
   }
 
   const allCharacters = [
@@ -175,16 +251,12 @@ function renderPlayerAvatarPicker() {
 
       updateState({ playerAvatar: char.avatar });
       updateUI();
-      if (playerPreviewBox) {
-        playerPreviewBox.style.display = 'block';
-      }
     });
 
     container.appendChild(card);
   });
 }
 
-// --- PLAYER ARTIFACTS RENDER ---
 function renderArtifactsUI() {
   const inventoryGrid = document.getElementById('inventory-grid');
   if (!inventoryGrid) return;
@@ -253,7 +325,6 @@ function unequipArtifact(slotType) {
   updateUI();
 }
 
-// --- ENEMY SELECTION & ENEMY EQUIPMENT SYSTEM ---
 function renderEnemySelection() {
   const enemyGrid = document.getElementById('enemy-select-grid');
   const previewBox = document.getElementById('selected-enemy-preview');
@@ -398,7 +469,6 @@ function checkTurnReadiness() {
   updateZonesIndicator();
 }
 
-// Допоміжні функції кліку на зони атаки та захисту
 function toggleAttackZone(zone) {
   const btn = document.querySelector(`.btn-zone-attack[data-zone="${zone}"]`);
   if (!btn) return;
@@ -428,7 +498,6 @@ function toggleDefendZone(zone) {
   checkTurnReadiness();
 }
 
-// --- KEYBOARD CONTROLS SYSTEM ---
 function setupKeyboardControls() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !document.getElementById('screen-registration').classList.contains('hidden')) {
@@ -459,11 +528,7 @@ function setupKeyboardControls() {
     }
 
     const defendCodeMap = {
-      'KeyQ': 0,
-      'KeyW': 1,
-      'KeyE': 2,
-      'KeyR': 3,
-      'KeyT': 4
+      'KeyQ': 0, 'KeyW': 1, 'KeyE': 2, 'KeyR': 3, 'KeyT': 4
     };
 
     if (e.code in defendCodeMap) {
@@ -482,10 +547,12 @@ function setupKeyboardControls() {
 
 function setupEventListeners() {
   document.getElementById('btn-register').addEventListener('click', () => {
-    const name = document.getElementById('reg-name').value.trim();
-    if (!name) return alert("Please enter your fighter's name!");
-    updateState({ playerName: name });
-    soundManager.playBGM('menu'); // Запуск BGM при першому підтвердженні
+    const rawName = document.getElementById('reg-name').value;
+    const validatedName = validateAndGetPlayerName(rawName);
+    if (!validatedName) return;
+
+    updateState({ playerName: validatedName });
+    soundManager.playBGM('menu');
     updateUI();
     showScreen('screen-home');
   });
@@ -507,26 +574,23 @@ function setupEventListeners() {
   document.querySelector('.btn-character-back').addEventListener('click', () => showScreen('screen-home'));
 
   document.getElementById('btn-save-settings').addEventListener('click', () => {
-    const newName = document.getElementById('settings-name').value.trim();
-    if (!newName) return alert("Fighter's name cannot be empty!");
-    updateState({ playerName: newName });
+    const rawName = document.getElementById('settings-name').value;
+    const validatedName = validateAndGetPlayerName(rawName);
+    if (!validatedName) return;
+
+    updateState({ playerName: validatedName });
     updateUI();
     alert("Changes saved successfully! 💾");
   });
 
-  // --- AUDIO & THEME CONTROLS IN SETTINGS ---
   const sfxToggle = document.getElementById('setting-sfx-toggle');
   if (sfxToggle) {
-    sfxToggle.addEventListener('change', (e) => {
-      soundManager.toggleSFX(!e.target.checked);
-    });
+    sfxToggle.addEventListener('change', (e) => soundManager.toggleSFX(!e.target.checked));
   }
 
   const bgmToggle = document.getElementById('setting-bgm-toggle');
   if (bgmToggle) {
-    bgmToggle.addEventListener('change', (e) => {
-      soundManager.toggleBGM(!e.target.checked);
-    });
+    bgmToggle.addEventListener('change', (e) => soundManager.toggleBGM(!e.target.checked));
   }
 
   const themeSelect = document.getElementById('setting-theme-select');
@@ -562,33 +626,21 @@ function setupEventListeners() {
     combatState.enemyHP = enemyStats.maxHP;
     combatState.enemyMaxHP = enemyStats.maxHP;
 
-    document.getElementById('arena-player-avatar').src = gameState.playerAvatar || 'assets/avatars/ren.gif';
-    document.getElementById('arena-player-name').textContent = gameState.playerName;
-    document.getElementById('arena-enemy-avatar').src = `assets/avatars/${combatState.currentEnemyName.toLowerCase()}.gif`;
-    document.getElementById('arena-enemy-name').textContent = combatState.currentEnemyName;
-
-    updateHPBars();
-    updateZonesIndicator();
+    prepareBattleArenaUI();
 
     document.getElementById('battle-log').innerHTML = '';
     logMessage(`⚔️ Battle started! ${gameState.playerName} (${maxHP} HP) vs ${combatState.currentEnemyName} (${enemyStats.maxHP} HP)!`, 'system');
 
-    // Зберігаємо початковий стан бою
     saveCombatState();
-
     showScreen('screen-battle');
   });
 
   document.querySelectorAll('.btn-zone-attack').forEach(button => {
-    button.addEventListener('click', () => {
-      toggleAttackZone(button.getAttribute('data-zone'));
-    });
+    button.addEventListener('click', () => toggleAttackZone(button.getAttribute('data-zone')));
   });
 
   document.querySelectorAll('.btn-zone-defend').forEach(button => {
-    button.addEventListener('click', () => {
-      toggleDefendZone(button.getAttribute('data-zone'));
-    });
+    button.addEventListener('click', () => toggleDefendZone(button.getAttribute('data-zone')));
   });
 
   const btnEndTurn = document.getElementById('btn-end-turn');
@@ -602,60 +654,13 @@ function setupEventListeners() {
     });
   }
 
+  // --- SAVE COMBAT ON EXITING ARENA TO MENU ---
   document.querySelector('.btn-battle-back').addEventListener('click', () => {
-    clearCombatState(); // Очищаємо незавершений бій при виході
-
-    const arenaContainer = document.querySelector('.arena-container');
-    if (arenaContainer && arenaContainer.querySelector('.victory-screen-wrapper')) {
-      const { maxHP } = getPlayerStats();
-      arenaContainer.innerHTML = `
-        <div class="fighter-card player-side">
-          <h3>Your Fighter</h3>
-          <img id="arena-player-avatar" src="${gameState.playerAvatar || 'assets/avatars/ren.gif'}" alt="Player">
-          <div id="arena-player-name" class="fighter-name">${gameState.playerName}</div>
-          <div class="hp-bar-container"><div id="player-hp-bar" class="hp-bar"></div></div>
-          <div id="player-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">${maxHP} / ${maxHP}</div>
-        </div>
-        <div id="combat-actions" class="combat-actions">
-          <h4>Choose 1 attack and 2 defence zones</h4>
-          <div class="zones-columns-wrapper">
-            <div class="zone-column">
-              <span style="color: #ff4757; font-size: 12px; font-weight: bold; margin-bottom: 5px;">⚡ ATTACK</span>
-              <button type="button" class="btn-zone-attack" data-zone="Head">[1] Head 🪖</button>
-              <button type="button" class="btn-zone-attack" data-zone="Neck">[2] Neck 🎯</button>
-              <button type="button" class="btn-zone-attack" data-zone="Body">[3] Body 🥋</button>
-              <button type="button" class="btn-zone-attack" data-zone="Belly">[4] Belly 🔥</button>
-              <button type="button" class="btn-zone-attack" data-zone="Legs">[5] Legs 🥾</button>
-            </div>
-            <div class="zone-divider" style="width: 1px; background: #444; align-self: stretch;"></div>
-            <div class="zone-column">
-              <span style="color: #2ed573; font-size: 12px; font-weight: bold; margin-bottom: 5px;">🛡️ DEFEND</span>
-              <button type="button" class="btn-zone-defend" data-zone="Head">[Q] Head 🪖</button>
-              <button type="button" class="btn-zone-defend" data-zone="Neck">[W] Neck 🎯</button>
-              <button type="button" class="btn-zone-defend" data-zone="Body">[E] Body 🥋</button>
-              <button type="button" class="btn-zone-defend" data-zone="Belly">[R] Belly 🔥</button>
-              <button type="button" class="btn-zone-defend" data-zone="Legs">[T] Legs 🥾</button>
-            </div>
-          </div>
-          <div id="selected-zones-indicator" style="margin: 5px 0; font-size: 12px; font-weight: bold; color: #eccc68; background: #222; padding: 4px 10px; border-radius: 4px; border: 1px solid #444; text-align: center; width: 90%;">
-            🎯 A: <span id="indicator-attack" style="color: #ff4757;">None</span> | 🛡️ D: <span id="indicator-defend" style="color: #2ed573;">None</span>
-          </div>
-          <button id="btn-end-turn" class="btn-primary" disabled style="margin-top: 10px; width: 100%; max-width: 200px; opacity: 0.5; cursor: not-allowed; background-color: #eccc68; color: #000; padding: 8px;">
-            EXECUTE TURN ⚔️ [Space]
-          </button>
-        </div>
-        <div class="fighter-card enemy-side">
-          <h3>Enemy</h3>
-          <img id="arena-enemy-avatar" src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22 x=%2215%22>❓</text></svg>" alt="Enemy">
-          <div id="arena-enemy-name" class="fighter-name">Enemy</div>
-          <div class="hp-bar-container"><div id="enemy-hp-bar" class="hp-bar"></div></div>
-          <div id="enemy-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
-        </div>
-      `;
-    }
-
+    saveCombatState();
+    
     combatState.selectedAttackZone = '';
     combatState.selectedDefendZones = [];
+    
     showScreen('screen-home');
   });
 }

@@ -547,3 +547,13 @@ body.theme-dungeon #app-container {
     transform: translate(-50%, -80px) scale(0.9) rotate(0deg);
   }
 }
+/* Помаранчева кнопка повернення */
+#btn-continue-battle {
+  background-color: #ff9f43 !important; 
+  color: #ffffff; 
+  border-color: #e08e38;  
+}
+
+#btn-continue-battle:hover {
+  background-color: #ff8e29 !important; 
+}

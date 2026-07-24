@@ -67,6 +67,49 @@ export function clearCombatState() {
   localStorage.removeItem('active_combat_state');
 }
 
+// --- RESTORE COMBAT STATE ---
+export function restoreActiveBattle(navigateToScreenCallback) {
+  const savedCombat = localStorage.getItem('active_combat_state');
+  if (!savedCombat) return false;
+
+  try {
+    const data = JSON.parse(savedCombat);
+
+    // Перевіряємо, чи бій не був завершений
+    if (!data.isInBattle || data.playerHP <= 0 || data.enemyHP <= 0) {
+      clearCombatState();
+      return false;
+    }
+
+    // 1. Відновлюємо дані бою
+    combatState.playerHP = data.playerHP;
+    combatState.enemyHP = data.enemyHP;
+    combatState.enemyMaxHP = data.enemyMaxHP;
+    combatState.currentEnemyName = data.currentEnemyName;
+    combatState.enemyEquipment = data.enemyEquipment || {};
+
+    // 2. Відновлюємо лог бою
+    const battleLogEl = document.getElementById('battle-log');
+    if (battleLogEl && data.battleLogHTML) {
+      battleLogEl.innerHTML = data.battleLogHTML;
+      battleLogEl.scrollTop = battleLogEl.scrollHeight;
+    }
+
+    // 3. Оновлюємо графіку HP bars
+    updateHPBars();
+
+    // 4. Переходимо на екран бою
+    if (typeof navigateToScreenCallback === 'function') {
+      navigateToScreenCallback('screen-battle');
+    }
+
+    return true;
+  } catch (e) {
+    console.error("Error restoring combat state:", e);
+    return false;
+  }
+}
+
 export function getEnemyStats() {
   const profile = enemyProfiles[combatState.currentEnemyName] || { baseDamage: 15 };
   let bonusHP = 0;
@@ -217,7 +260,7 @@ export function executeCombatTurn(onBattleEndCallback) {
 
     combatState.enemyHP = Math.max(0, combatState.enemyHP - damage);
     
-    // 💡 Оновлюємо HP bar ворога негайно після завдання шкоди
+    // Оновлюємо HP bar ворога негайно після завдання шкоди
     updateHPBars();
     
     logMessage(`💥 ${gameState.playerName} hits ${combatState.currentEnemyName} in the ${combatState.selectedAttackZone} for ${damage} HP! ${critText}`, 'player');
@@ -250,7 +293,7 @@ export function executeCombatTurn(onBattleEndCallback) {
 
       combatState.playerHP = Math.max(0, combatState.playerHP - damage);
       
-      // 💡 Оновлюємо HP bar гравця негайно після завдання шкоди
+      // Оновлюємо HP bar гравця негайно після завдання шкоди
       updateHPBars();
       
       logMessage(`💥 ${combatState.currentEnemyName} hits ${gameState.playerName} in the ${attackZone} for ${damage} HP! ${critText}`, 'enemy');
