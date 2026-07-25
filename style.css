@@ -5,6 +5,11 @@
   padding: 0;
 }
 
+html, body {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #1a1a1a;
@@ -12,12 +17,13 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
-  padding: 20px;
+  justify-content: flex-start; /* Виправлено: від верхнього краю, щоб заголовок не вилізав */
+  padding: 20px 10px;
 }
 
 header {
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 /* --- ГОЛОВНИЙ КОНТЕЙНЕР ДОДАТКУ --- */
@@ -27,18 +33,20 @@ header {
   background-color: #262626;
   border: 2px solid #ff4757;
   border-radius: 8px;
-  padding: 30px;
+  padding: 25px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
   text-align: center;
   transition: max-width 0.3s ease;
+  position: relative;
 }
 
 #app-container:has(#screen-battle:not(.hidden)) {
   max-width: 950px;
+  padding: 15px 20px;
 }
 
 h2 {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   color: #ff4757;
 }
 
@@ -166,9 +174,9 @@ label {
   display: flex;
   justify-content: space-between;
   align-items: stretch;
-  gap: 15px;
+  gap: 12px;
   width: 100%;
-  margin: 15px 0;
+  margin: 10px 0;
 }
 
 .fighter-card {
@@ -176,7 +184,7 @@ label {
   background-color: #1e1e1e;
   border: 1px solid #333;
   border-radius: 8px;
-  padding: 15px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -185,16 +193,16 @@ label {
 }
 
 .fighter-card img {
-  width: 100px;
-  height: 100px;
-  margin: 10px 0;
+  width: 85px;
+  height: 85px;
+  margin: 5px 0;
 }
 
 .fighter-name {
   font-weight: bold;
-  font-size: 16px;
+  font-size: 15px;
   color: #eccc68;
-  margin-bottom: 5px;
+  margin-bottom: 3px;
 }
 
 /* --- ЗДОРОВ'Я (HP BARS) --- */
@@ -202,8 +210,8 @@ label {
   width: 100%;
   background-color: #444;
   border-radius: 4px;
-  height: 14px;
-  margin-top: 8px;
+  height: 12px;
+  margin-top: 6px;
   overflow: hidden;
   border: 1px solid #000;
 }
@@ -227,13 +235,13 @@ label {
   background-color: #1e1e1e;
   border: 1px solid #444;
   border-radius: 8px;
-  padding: 15px;
+  padding: 10px;
   width: 100%;
 }
 
 .zones-columns-wrapper {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
   justify-content: space-between;
 }
@@ -241,7 +249,7 @@ label {
 .zone-column {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   flex: 1;
 }
 
@@ -249,8 +257,8 @@ label {
   background-color: #3a3a3a !important;
   color: #ffffff !important;
   border: 2px solid #555555 !important;
-  padding: 10px 12px !important;
-  font-size: 14px !important;
+  padding: 6px 10px !important;
+  font-size: 13px !important;
   border-radius: 6px !important;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -281,20 +289,22 @@ label {
 
 #selected-zones-indicator {
   width: 100% !important;
+  margin-top: 4px;
+  font-size: 13px;
 }
 
 /* --- ЛОГ БОЮ --- */
 .battle-log {
   width: 100%;
-  max-height: 120px;
-  min-height: 85px;
+  max-height: 95px;
+  min-height: 75px;
   background-color: #1e1e1e;
   border: 1px solid #444;
   border-radius: 6px;
-  margin-top: 15px;
-  padding: 10px;
+  margin-top: 8px;
+  padding: 8px;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 13px;
+  font-size: 12px;
   text-align: left;
   overflow-y: auto;
   color: #a4b0be;
@@ -302,7 +312,7 @@ label {
 
 .log-message {
   margin-bottom: 4px;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 .log-player { color: #2ed573; }
 .log-enemy { color: #ff4757; }
@@ -310,7 +320,7 @@ label {
 
 /* --- ВИБІР ВОРОГА --- */
 .enemy-selection {
-  margin-top: 15px;
+  margin-top: 10px;
 }
 
 .enemy-grid {
@@ -318,7 +328,7 @@ label {
   justify-content: center;
   gap: 10px;
   flex-wrap: wrap;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .enemy-option {
@@ -335,17 +345,17 @@ label {
 
 .battle-actions {
   width: 100%;
-  margin-top: 15px;
+  margin-top: 8px;
 }
 
 /* --- АРТЕФАКТИ ТА ІНВЕНТАР --- */
 .artifacts-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 10px;
   background: #1a1a1a;
-  padding: 15px;
+  padding: 12px;
   border-radius: 8px;
   border: 1px solid #333;
 }
@@ -358,8 +368,8 @@ label {
 }
 
 .artifact-slot {
-  width: 70px;
-  height: 70px;
+  width: 60px;
+  height: 60px;
   background: #262626;
   border: 2px dashed #444;
   border-radius: 6px;
@@ -381,27 +391,27 @@ label {
 }
 
 .artifact-slot img {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   image-rendering: pixelated;
 }
 
 .inventory-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
   gap: 8px;
   background: #111;
   padding: 10px;
   border-radius: 6px;
-  min-height: 140px;
-  max-height: 250px;
+  min-height: 100px;
+  max-height: 160px; /* Зменшено висоту, щоб вміщалися всі кнопки під ним */
   overflow-y: auto;
   border: 1px solid #222;
 }
 
 .inventory-item {
-  width: 55px;
-  height: 55px;
+  width: 48px;
+  height: 48px;
   background: #222;
   border: 1px solid #444;
   border-radius: 4px;
@@ -418,8 +428,8 @@ label {
 }
 
 .inventory-item img {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   image-rendering: pixelated;
 }
 
@@ -428,29 +438,38 @@ label {
   border-color: #2ed573;
 }
 
-/* --- СТИЛІЗАЦІЯ СКРОЛБАРА ДЛЯ БОЙОВОГО ЛОГУ --- */
-#battle-log::-webkit-scrollbar {
+/* --- СТИЛІЗАЦІЯ СКРОЛБАРА (БОЙОВИЙ ЛОГ ТА ІНВЕНТАР) --- */
+#battle-log::-webkit-scrollbar,
+.inventory-grid::-webkit-scrollbar,
+div[id*="inventory"]::-webkit-scrollbar {
   width: 8px;
 }
 
-#battle-log::-webkit-scrollbar-track {
+#battle-log::-webkit-scrollbar-track,
+.inventory-grid::-webkit-scrollbar-track,
+div[id*="inventory"]::-webkit-scrollbar-track {
   background: #111;
   border-radius: 4px;
 }
 
-#battle-log::-webkit-scrollbar-thumb {
-  background: #444;
+#battle-log::-webkit-scrollbar-thumb,
+.inventory-grid::-webkit-scrollbar-thumb,
+div[id*="inventory"]::-webkit-scrollbar-thumb {
+  background: #ff4757;
   border-radius: 4px;
   border: 1px solid #222;
 }
 
-#battle-log::-webkit-scrollbar-thumb:hover {
-  background: #ff4757;
+#battle-log::-webkit-scrollbar-thumb:hover,
+.inventory-grid::-webkit-scrollbar-thumb:hover,
+div[id*="inventory"]::-webkit-scrollbar-thumb:hover {
+  background: #ff6b81;
 }
 
-#battle-log {
+#battle-log,
+.inventory-grid {
   scrollbar-width: thin;
-  scrollbar-color: #444 #111;
+  scrollbar-color: #ff4757 #111;
 }
 
 /* --- ARENA THEMES --- */
@@ -647,7 +666,7 @@ body.theme-dungeon #app-container {
   }
 
   #battle-log {
-    max-height: 100px !important;
+    max-height: 90px !important;
     font-size: 0.75rem !important;
     padding: 6px !important;
   }
