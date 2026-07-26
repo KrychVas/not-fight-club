@@ -180,6 +180,17 @@ function updateUI() {
     themeSelect.value = gameState.theme;
   }
 
+  // Синхронізація чекбоксів налаштувань звуку із реальними значеннями soundManager
+  const bgmToggle = document.getElementById('setting-bgm-toggle');
+  if (bgmToggle) {
+    bgmToggle.checked = soundManager.isBGMMuted;
+  }
+
+  const sfxToggle = document.getElementById('setting-sfx-toggle');
+  if (sfxToggle) {
+    sfxToggle.checked = soundManager.isSFXMuted;
+  }
+
   let continueBtn = document.getElementById('btn-continue-battle');
   const homeScreen = document.getElementById('screen-home');
 
@@ -604,12 +615,12 @@ function setupEventListeners() {
 
   const sfxToggle = document.getElementById('setting-sfx-toggle');
   if (sfxToggle) {
-    sfxToggle.addEventListener('change', (e) => soundManager.toggleSFX(!e.target.checked));
+    sfxToggle.addEventListener('change', (e) => soundManager.toggleSFX(e.target.checked));
   }
 
   const bgmToggle = document.getElementById('setting-bgm-toggle');
   if (bgmToggle) {
-    bgmToggle.addEventListener('change', (e) => soundManager.toggleBGM(!e.target.checked));
+    bgmToggle.addEventListener('change', (e) => soundManager.toggleBGM(e.target.checked));
   }
 
   const themeSelect = document.getElementById('setting-theme-select');
@@ -643,6 +654,23 @@ function setupEventListeners() {
     if (typeof resetBattleUI === 'function') {
       resetBattleUI();
     }
+
+    const winnerBanner = document.querySelector('.winner-banner') || document.getElementById('victory-overlay');
+    if (winnerBanner) {
+      winnerBanner.classList.add('hidden');
+      winnerBanner.style.display = 'none';
+    }
+
+    const actionControls = document.getElementById('battle-controls') || document.querySelector('.battle-controls');
+    if (actionControls) {
+      actionControls.style.display = 'block';
+      actionControls.classList.remove('hidden');
+    }
+
+    combatState.selectedAttackZone = '';
+    combatState.selectedDefendZones = [];
+    document.querySelectorAll('.btn-zone-attack').forEach(b => b.classList.remove('selected-attack'));
+    document.querySelectorAll('.btn-zone-defend').forEach(b => b.classList.remove('selected-defend'));
 
     const { maxHP } = getPlayerStats();
     const enemyStats = getEnemyStats();
