@@ -38,17 +38,20 @@ export function resetBattleUI() {
   }
 
   const arenaContainer = document.querySelector('.arena-container');
-  if (arenaContainer && arenaContainer.querySelector('.victory-screen-wrapper')) {
+  if (arenaContainer) {
     const playerAvatar = gameState.playerAvatar || 'assets/avatars/ren.gif';
-    const enemyAvatar = `assets/avatars/${(combatState.currentEnemyName || 'spider').toLowerCase()}.gif`;
+    const enemyName = combatState.currentEnemyName || 'cho';
+    const enemyAvatar = `assets/avatars/${enemyName.toLowerCase()}.gif`;
 
     arenaContainer.innerHTML = `
       <div class="player-side">
         <img id="arena-player-avatar" src="${playerAvatar}" alt="Player Avatar">
+        <div id="arena-player-name" class="fighter-name">${gameState.playerName || 'Player'}</div>
       </div>
       <div class="vs-badge">VS</div>
       <div class="enemy-side">
         <img id="arena-enemy-avatar" src="${enemyAvatar}" alt="Enemy Avatar">
+        <div id="arena-enemy-name" class="fighter-name">${combatState.currentEnemyName || 'Enemy'}</div>
       </div>
     `;
   }
