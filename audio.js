@@ -19,6 +19,7 @@ class SoundManager {
     });
 
     this.tracks.gameOver.volume = 0.4;
+    this.tracks.gameOver.loop = false; // Переконуємося, що GameOver не циклиться
     this.currentTrack = null;
     this.currentTrackKey = null;
   }
@@ -37,6 +38,11 @@ class SoundManager {
 
   playBGM(trackKey = 'menu') {
     if (this.isBGMMuted || !this.tracks[trackKey]) return;
+
+    if (this.tracks.gameOver && !this.tracks.gameOver.paused) {
+      this.tracks.gameOver.pause();
+      this.tracks.gameOver.currentTime = 0;
+    }
 
     if (this.currentTrackKey === trackKey && this.currentTrack && !this.currentTrack.paused) {
       return;
@@ -59,6 +65,11 @@ class SoundManager {
       this.currentTrack.currentTime = 0;
       this.currentTrack = null;
       this.currentTrackKey = null;
+    }
+
+    if (this.tracks.gameOver) {
+      this.tracks.gameOver.pause();
+      this.tracks.gameOver.currentTime = 0;
     }
   }
 
@@ -150,7 +161,7 @@ class SoundManager {
 
   playDefeatSound() {
     this.stopBGM();
-    if (!this.isBGMMuted) {
+    if (!this.isBGMMuted && this.tracks.gameOver) {
       this.tracks.gameOver.currentTime = 0;
       this.tracks.gameOver.play().catch(() => {});
     }

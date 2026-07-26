@@ -3,15 +3,15 @@ import { ARTIFACTS_DATABASE } from './artifacts.js';
 import { soundManager } from './audio.js';
 
 export const enemyProfiles = {
-  'Spider':  { baseDamage: 12, attacksCount: 2, defendsCount: 1, bio: 'A swift and venomous predator.' },
-  'Troll':   { baseDamage: 25, attacksCount: 1, defendsCount: 3, bio: 'A heavy powerhouse with incredible defense.' },
-  'Boss':    { baseDamage: 20, attacksCount: 2, defendsCount: 2, bio: 'The legendary arena champion.' },
-  'Cho':     { baseDamage: 14, attacksCount: 1, defendsCount: 2, bio: 'A disciplined martial artist.' },
-  'Gal':     { baseDamage: 16, attacksCount: 2, defendsCount: 1, bio: 'An aggressive dual-wielding berserker.' },
-  'Jon':     { baseDamage: 15, attacksCount: 1, defendsCount: 2, bio: 'A balanced and tricky duelist.' },
-  'Lodman':  { baseDamage: 18, attacksCount: 2, defendsCount: 2, bio: 'A armored knight with broad strikes.' },
-  'Ren':     { baseDamage: 15, attacksCount: 1, defendsCount: 2, bio: 'A swift shadow assassin.' },
-  'Ryuken':  { baseDamage: 22, attacksCount: 1, defendsCount: 2, bio: 'Master of lethal precision strikes.' }
+  'Spider':   { baseDamage: 12, attacksCount: 2, defendsCount: 1, bio: 'A swift and venomous predator.' },
+  'Troll':    { baseDamage: 25, attacksCount: 1, defendsCount: 3, bio: 'A heavy powerhouse with incredible defense.' },
+  'Boss':     { baseDamage: 20, attacksCount: 2, defendsCount: 2, bio: 'The legendary arena champion.' },
+  'Cho':      { baseDamage: 14, attacksCount: 1, defendsCount: 2, bio: 'A disciplined martial artist.' },
+  'Gal':      { baseDamage: 16, attacksCount: 2, defendsCount: 1, bio: 'An aggressive dual-wielding berserker.' },
+  'Jon':      { baseDamage: 15, attacksCount: 1, defendsCount: 2, bio: 'A balanced and tricky duelist.' },
+  'Lodman':   { baseDamage: 18, attacksCount: 2, defendsCount: 2, bio: 'A armored knight with broad strikes.' },
+  'Ren':      { baseDamage: 15, attacksCount: 1, defendsCount: 2, bio: 'A swift shadow assassin.' },
+  'Ryuken':   { baseDamage: 22, attacksCount: 1, defendsCount: 2, bio: 'Master of lethal precision strikes.' }
 };
 
 export let combatState = {

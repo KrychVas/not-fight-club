@@ -124,12 +124,19 @@ function init() {
 }
 
 function prepareBattleArenaUI() {
-  document.getElementById('arena-player-avatar').src = gameState.playerAvatar || 'assets/avatars/ren.gif';
-  document.getElementById('arena-player-name').textContent = gameState.playerName;
+  const playerAvatarEl = document.getElementById('arena-player-avatar');
+  const playerNameEl = document.getElementById('arena-player-name');
+  const enemyAvatarEl = document.getElementById('arena-enemy-avatar');
+  const enemyNameEl = document.getElementById('arena-enemy-name');
+
+  if (playerAvatarEl) playerAvatarEl.src = gameState.playerAvatar || 'assets/avatars/ren.gif';
+  if (playerNameEl) playerNameEl.textContent = gameState.playerName;
+  
   if (combatState.currentEnemyName) {
-    document.getElementById('arena-enemy-avatar').src = `assets/avatars/${combatState.currentEnemyName.toLowerCase()}.gif`;
-    document.getElementById('arena-enemy-name').textContent = combatState.currentEnemyName;
+    if (enemyAvatarEl) enemyAvatarEl.src = `assets/avatars/${combatState.currentEnemyName.toLowerCase()}.gif`;
+    if (enemyNameEl) enemyNameEl.textContent = combatState.currentEnemyName;
   }
+
   updateHPBars();
   updateZonesIndicator();
 }
@@ -182,7 +189,6 @@ function updateUI() {
       
       continueBtn.className = 'btn-primary btn-menu'; 
       continueBtn.textContent = 'Return to Battle ⚔️';
-      
       
       const startBtn = document.getElementById('btn-start-battle');
       if (startBtn && startBtn.parentNode) {
@@ -325,9 +331,12 @@ function renderEnemySelection() {
   if (!enemyGrid) return;
   enemyGrid.innerHTML = '';
   if (previewBox) previewBox.style.display = 'none';
-  btnConfirm.disabled = true;
-  btnConfirm.style.opacity = '0.5';
-  btnConfirm.style.cursor = 'not-allowed';
+
+  if (btnConfirm) {
+    btnConfirm.disabled = true;
+    btnConfirm.style.opacity = '0.5';
+    btnConfirm.style.cursor = 'not-allowed';
+  }
 
   combatState.enemyEquipment = {};
 
@@ -358,13 +367,17 @@ function renderEnemySelection() {
       combatState.currentEnemyName = enemy.name;
       combatState.enemyEquipment = {};
       
-      document.getElementById('preview-enemy-avatar').src = enemy.avatar;
+      const previewAvatar = document.getElementById('preview-enemy-avatar');
+      if (previewAvatar) previewAvatar.src = enemy.avatar;
+      
       updateEnemyUI();
 
       if (previewBox) previewBox.style.display = 'block';
-      btnConfirm.disabled = false;
-      btnConfirm.style.opacity = '1';
-      btnConfirm.style.cursor = 'pointer';
+      if (btnConfirm) {
+        btnConfirm.disabled = false;
+        btnConfirm.style.opacity = '1';
+        btnConfirm.style.cursor = 'pointer';
+      }
     });
 
     enemyGrid.appendChild(card);
@@ -375,13 +388,19 @@ function updateEnemyUI() {
   const profile = enemyProfiles[combatState.currentEnemyName] || {};
   const stats = getEnemyStats();
 
-  document.getElementById('preview-enemy-name').textContent = combatState.currentEnemyName;
+  const nameEl = document.getElementById('preview-enemy-name');
+  if (nameEl) nameEl.textContent = combatState.currentEnemyName;
+
   const enemyBioEl = document.getElementById('preview-enemy-bio');
   if (enemyBioEl) {
     enemyBioEl.textContent = profile.bio || 'Formidable opponent in the arena.';
   }
-  document.getElementById('preview-enemy-hp').textContent = stats.maxHP;
-  document.getElementById('preview-enemy-dmg').textContent = stats.totalDamage;
+
+  const hpEl = document.getElementById('preview-enemy-hp');
+  if (hpEl) hpEl.textContent = stats.maxHP;
+
+  const dmgEl = document.getElementById('preview-enemy-dmg');
+  if (dmgEl) dmgEl.textContent = stats.totalDamage;
 
   renderEnemyArtifactsUI();
 }
@@ -492,17 +511,23 @@ function toggleDefendZone(zone) {
 
 function setupKeyboardControls() {
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !document.getElementById('screen-registration').classList.contains('hidden')) {
-      document.getElementById('btn-register').click();
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      if (e.key === 'Enter') {
+        const regScreen = document.getElementById('screen-registration');
+        const setScreen = document.getElementById('screen-settings');
+        
+        if (regScreen && !regScreen.classList.contains('hidden')) {
+          document.getElementById('btn-register')?.click();
+        } else if (setScreen && !setScreen.classList.contains('hidden')) {
+          document.getElementById('btn-save-settings')?.click();
+        }
+      }
       return;
     }
 
-    if (e.key === 'Enter' && !document.getElementById('screen-settings').classList.contains('hidden')) {
-      document.getElementById('btn-save-settings').click();
-      return;
-    }
-
-    const isBattleScreen = !document.getElementById('screen-battle').classList.contains('hidden');
+    const battleScreen = document.getElementById('screen-battle');
+    const isBattleScreen = battleScreen && !battleScreen.classList.contains('hidden');
     if (!isBattleScreen) return;
 
     const zones = ['Head', 'Neck', 'Body', 'Belly', 'Legs'];
@@ -538,8 +563,8 @@ function setupKeyboardControls() {
 }
 
 function setupEventListeners() {
-  document.getElementById('btn-register').addEventListener('click', () => {
-    const rawName = document.getElementById('reg-name').value;
+  document.getElementById('btn-register')?.addEventListener('click', () => {
+    const rawName = document.getElementById('reg-name')?.value;
     const validatedName = validateAndGetPlayerName(rawName);
     if (!validatedName) return;
 
@@ -549,12 +574,13 @@ function setupEventListeners() {
     showScreen('screen-home');
   });
 
-  document.getElementById('btn-to-settings').addEventListener('click', () => {
-    document.getElementById('settings-name').value = gameState.playerName;
+  document.getElementById('btn-to-settings')?.addEventListener('click', () => {
+    const settingsInput = document.getElementById('settings-name');
+    if (settingsInput) settingsInput.value = gameState.playerName;
     showScreen('screen-settings');
   });
 
-  document.getElementById('btn-to-character').addEventListener('click', () => {
+  document.getElementById('btn-to-character')?.addEventListener('click', () => {
     const playerPreviewBox = document.getElementById('selected-player-preview');
     if (playerPreviewBox) {
       playerPreviewBox.style.display = gameState.playerAvatar ? 'block' : 'none';
@@ -563,10 +589,10 @@ function setupEventListeners() {
     showScreen('screen-character');
   });
 
-  document.querySelector('.btn-character-back').addEventListener('click', () => showScreen('screen-home'));
+  document.querySelector('.btn-character-back')?.addEventListener('click', () => showScreen('screen-home'));
 
-  document.getElementById('btn-save-settings').addEventListener('click', () => {
-    const rawName = document.getElementById('settings-name').value;
+  document.getElementById('btn-save-settings')?.addEventListener('click', () => {
+    const rawName = document.getElementById('settings-name')?.value;
     const validatedName = validateAndGetPlayerName(rawName);
     if (!validatedName) return;
 
@@ -593,7 +619,7 @@ function setupEventListeners() {
     });
   }
 
-  document.getElementById('btn-reset-game').addEventListener('click', () => {
+  document.getElementById('btn-reset-game')?.addEventListener('click', () => {
     if (confirm("Are you sure you want to reset all progress?")) {
       clearCombatState();
       localStorage.clear();
@@ -601,16 +627,16 @@ function setupEventListeners() {
     }
   });
 
-  document.querySelector('.btn-settings-back').addEventListener('click', () => showScreen('screen-home'));
+  document.querySelector('.btn-settings-back')?.addEventListener('click', () => showScreen('screen-home'));
 
-  document.getElementById('btn-start-battle').addEventListener('click', () => {
+  document.getElementById('btn-start-battle')?.addEventListener('click', () => {
     renderEnemySelection();
     showScreen('screen-enemy-select');
   });
 
-  document.querySelector('.btn-enemy-select-back').addEventListener('click', () => showScreen('screen-home'));
+  document.querySelector('.btn-enemy-select-back')?.addEventListener('click', () => showScreen('screen-home'));
 
-  document.getElementById('btn-confirm-fight').addEventListener('click', () => {
+  document.getElementById('btn-confirm-fight')?.addEventListener('click', () => {
     const { maxHP } = getPlayerStats();
     const enemyStats = getEnemyStats();
 
@@ -620,7 +646,8 @@ function setupEventListeners() {
 
     prepareBattleArenaUI();
 
-    document.getElementById('battle-log').innerHTML = '';
+    const battleLog = document.getElementById('battle-log');
+    if (battleLog) battleLog.innerHTML = '';
     logMessage(`⚔️ Battle started! ${gameState.playerName} (${maxHP} HP) vs ${combatState.currentEnemyName} (${enemyStats.maxHP} HP)!`, 'system');
 
     saveCombatState();
@@ -646,7 +673,7 @@ function setupEventListeners() {
     });
   }
 
-  document.querySelector('.btn-battle-back').addEventListener('click', () => {
+  document.querySelector('.btn-battle-back')?.addEventListener('click', () => {
     saveCombatState();
     
     combatState.selectedAttackZone = '';

@@ -22,24 +22,31 @@ const defaultState = {
   }
 };
 
-export let gameState = { ...defaultState };
+export let gameState = JSON.parse(JSON.stringify(defaultState));
 
 export function loadState() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      gameState = { ...defaultState, ...parsed };
+      gameState = { 
+        ...defaultState, 
+        ...parsed,
+        equippedArtifacts: {
+          ...defaultState.equippedArtifacts,
+          ...(parsed.equippedArtifacts || {})
+        }
+      };
       
       if (!gameState.artifacts || gameState.artifacts.length < 10) {
         gameState.artifacts = Object.keys(ARTIFACTS_DATABASE);
       }
     } catch (e) {
       console.error("Error reading localStorage state:", e);
-      gameState = { ...defaultState };
+      gameState = JSON.parse(JSON.stringify(defaultState));
     }
   } else {
-    gameState = { ...defaultState };
+    gameState = JSON.parse(JSON.stringify(defaultState));
   }
   return gameState;
 }
