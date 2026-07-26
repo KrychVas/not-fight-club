@@ -180,7 +180,6 @@ function updateUI() {
     themeSelect.value = gameState.theme;
   }
 
-  // Синхронізація чекбоксів налаштувань звуку із реальними значеннями soundManager
   const bgmToggle = document.getElementById('setting-bgm-toggle');
   if (bgmToggle) {
     bgmToggle.checked = soundManager.isBGMMuted;
@@ -655,23 +654,6 @@ function setupEventListeners() {
       resetBattleUI();
     }
 
-    const winnerBanner = document.querySelector('.winner-banner') || document.getElementById('victory-overlay');
-    if (winnerBanner) {
-      winnerBanner.classList.add('hidden');
-      winnerBanner.style.display = 'none';
-    }
-
-    const actionControls = document.getElementById('battle-controls') || document.querySelector('.battle-controls');
-    if (actionControls) {
-      actionControls.style.display = 'block';
-      actionControls.classList.remove('hidden');
-    }
-
-    combatState.selectedAttackZone = '';
-    combatState.selectedDefendZones = [];
-    document.querySelectorAll('.btn-zone-attack').forEach(b => b.classList.remove('selected-attack'));
-    document.querySelectorAll('.btn-zone-defend').forEach(b => b.classList.remove('selected-defend'));
-
     const { maxHP } = getPlayerStats();
     const enemyStats = getEnemyStats();
 
@@ -689,24 +671,28 @@ function setupEventListeners() {
     showScreen('screen-battle');
   });
 
-  document.querySelectorAll('.btn-zone-attack').forEach(button => {
-    button.addEventListener('click', () => toggleAttackZone(button.getAttribute('data-zone')));
-  });
+  document.addEventListener('click', (e) => {
+    const attackBtn = e.target.closest('.btn-zone-attack');
+    if (attackBtn) {
+      toggleAttackZone(attackBtn.getAttribute('data-zone'));
+      return;
+    }
 
-  document.querySelectorAll('.btn-zone-defend').forEach(button => {
-    button.addEventListener('click', () => toggleDefendZone(button.getAttribute('data-zone')));
-  });
+    const defendBtn = e.target.closest('.btn-zone-defend');
+    if (defendBtn) {
+      toggleDefendZone(defendBtn.getAttribute('data-zone'));
+      return;
+    }
 
-  const btnEndTurn = document.getElementById('btn-end-turn');
-  if (btnEndTurn) {
-    btnEndTurn.addEventListener('click', () => {
+    const endTurnBtn = e.target.closest('#btn-end-turn');
+    if (endTurnBtn && !endTurnBtn.disabled) {
       executeCombatTurn((isWin) => {
         updateState({ wins: gameState.wins + (isWin ? 1 : 0), losses: gameState.losses + (isWin ? 0 : 1) });
         updateUI();
       });
       updateZonesIndicator();
-    });
-  }
+    }
+  });
 
   document.querySelector('.btn-battle-back')?.addEventListener('click', () => {
     saveCombatState();

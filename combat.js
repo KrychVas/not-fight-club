@@ -31,27 +31,76 @@ export function resetBattleUI() {
     victoryOverlay.style.display = 'none';
   }
 
-  const controlsPanel = document.getElementById('battle-controls');
-  if (controlsPanel) {
-    controlsPanel.style.display = 'block';
-    controlsPanel.classList.remove('hidden');
+  const victoryWrapper = document.querySelector('.victory-screen-wrapper');
+  if (victoryWrapper) {
+    victoryWrapper.remove();
+  }
+
+  const combatActions = document.getElementById('combat-actions');
+  if (combatActions) {
+    combatActions.style.display = 'flex';
+    combatActions.classList.remove('hidden');
   }
 
   const arenaContainer = document.querySelector('.arena-container');
-  if (arenaContainer) {
+  if (arenaContainer && !document.getElementById('arena-player-avatar')) {
     const playerAvatar = gameState.playerAvatar || 'assets/avatars/ren.gif';
     const enemyName = combatState.currentEnemyName || 'cho';
     const enemyAvatar = `assets/avatars/${enemyName.toLowerCase()}.gif`;
 
     arenaContainer.innerHTML = `
-      <div class="player-side">
-        <img id="arena-player-avatar" src="${playerAvatar}" alt="Player Avatar">
-        <div id="arena-player-name" class="fighter-name">${gameState.playerName || 'Player'}</div>
+      <div class="fighter-card player-side">
+        <h3>Your Fighter</h3>
+        <img id="arena-player-avatar" src="${playerAvatar}" alt="Player">
+        <div id="arena-player-name" class="fighter-name">${gameState.playerName || 'Fighter'}</div>
+        <div class="hp-bar-container">
+          <div id="player-hp-bar" class="hp-bar"></div>
+        </div>
+        <div id="player-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
       </div>
-      <div class="vs-badge">VS</div>
-      <div class="enemy-side">
-        <img id="arena-enemy-avatar" src="${enemyAvatar}" alt="Enemy Avatar">
+
+      <div id="combat-actions" class="combat-actions">
+        <h4>Choose 1 attack and 2 defence zones</h4>
+        
+        <div class="zones-columns-wrapper">
+          <div class="zone-column">
+            <span style="color: #ff4757; font-size: 12px; font-weight: bold; margin-bottom: 5px;">⚡ ATTACK</span>
+            <button type="button" class="btn-zone-attack" data-zone="Head">[1] Head 🪖</button>
+            <button type="button" class="btn-zone-attack" data-zone="Neck">[2] Neck 🎯</button>
+            <button type="button" class="btn-zone-attack" data-zone="Body">[3] Body 🥋</button>
+            <button type="button" class="btn-zone-attack" data-zone="Belly">[4] Belly 🔥</button>
+            <button type="button" class="btn-zone-attack" data-zone="Legs">[5] Legs 🥾</button>
+          </div>
+
+          <div class="zone-divider" style="width: 1px; background: #444; align-self: stretch;"></div>
+
+          <div class="zone-column">
+            <span style="color: #2ed573; font-size: 12px; font-weight: bold; margin-bottom: 5px;">🛡️ DEFEND</span>
+            <button type="button" class="btn-zone-defend" data-zone="Head">[Q] Head 🪖</button>
+            <button type="button" class="btn-zone-defend" data-zone="Neck">[W] Neck 🎯</button>
+            <button type="button" class="btn-zone-defend" data-zone="Body">[E] Body 🥋</button>
+            <button type="button" class="btn-zone-defend" data-zone="Belly">[R] Belly 🔥</button>
+            <button type="button" class="btn-zone-defend" data-zone="Legs">[T] Legs 🥾</button>
+          </div>
+        </div>
+
+        <div id="selected-zones-indicator" style="margin: 5px 0; font-size: 12px; font-weight: bold; color: #eccc68; background: #222; padding: 4px 10px; border-radius: 4px; border: 1px solid #444; text-align: center; width: 90%;">
+          🎯 A: <span id="indicator-attack" style="color: #ff4757;">None</span> | 🛡️ D: <span id="indicator-defend" style="color: #2ed573;">None</span>
+        </div>
+
+        <button id="btn-end-turn" class="btn-primary" disabled style="margin-top: 10px; width: 100%; max-width: 200px; opacity: 0.5; cursor: not-allowed; background-color: #eccc68; color: #000; padding: 8px;">
+          EXECUTE TURN ⚔️ [Space]
+        </button>
+      </div>
+
+      <div class="fighter-card enemy-side">
+        <h3>Enemy</h3>
+        <img id="arena-enemy-avatar" src="${enemyAvatar}" alt="Enemy">
         <div id="arena-enemy-name" class="fighter-name">${combatState.currentEnemyName || 'Enemy'}</div>
+        <div class="hp-bar-container">
+          <div id="enemy-hp-bar" class="hp-bar"></div>
+        </div>
+        <div id="enemy-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
       </div>
     `;
   }
@@ -363,16 +412,23 @@ export function executeCombatTurn(onBattleEndCallback) {
     }
     const planeAvatar = `assets/avatars/${baseName}_plane.png`;
 
+    const combatActions = document.getElementById('combat-actions');
+    if (combatActions) {
+      combatActions.style.display = 'none';
+    }
+
     const arenaContainer = document.querySelector('.arena-container');
     if (arenaContainer) {
-      arenaContainer.innerHTML = `
-        <div class="victory-screen-wrapper" style="width: 100%; text-align: center; padding: 20px; background: rgba(46, 213, 115, 0.1); border: 2px solid #2ed573; border-radius: 8px; animation: fadeIn 0.3s ease;">
-          <h2 style="color: #2ed573; font-size: 28px; font-weight: bold; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase;"> WINNER: ${gameState.playerName} 🏆 </h2>
-          <div style="width: 100%; overflow: hidden; border-radius: 6px; border: 1px solid #444; background: #111; padding: 15px 0; display: flex; justify-content: center;">
-            <img src="${planeAvatar}" style="max-width: 100%; height: auto; image-rendering: pixelated; object-fit: contain;" alt="Victory Animation">
-          </div>
+      const victoryWrapper = document.createElement('div');
+      victoryWrapper.className = 'victory-screen-wrapper';
+      victoryWrapper.style.cssText = 'width: 100%; text-align: center; padding: 20px; background: rgba(46, 213, 115, 0.1); border: 2px solid #2ed573; border-radius: 8px; animation: fadeIn 0.3s ease;';
+      victoryWrapper.innerHTML = `
+        <h2 style="color: #2ed573; font-size: 28px; font-weight: bold; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase;"> WINNER: ${gameState.playerName} 🏆 </h2>
+        <div style="width: 100%; overflow: hidden; border-radius: 6px; border: 1px solid #444; background: #111; padding: 15px 0; display: flex; justify-content: center;">
+          <img src="${planeAvatar}" style="max-width: 100%; height: auto; image-rendering: pixelated; object-fit: contain;" alt="Victory Animation">
         </div>
       `;
+      arenaContainer.appendChild(victoryWrapper);
     }
     
     onBattleEndCallback(true);
@@ -385,16 +441,23 @@ export function executeCombatTurn(onBattleEndCallback) {
     const enemyNameLower = combatState.currentEnemyName.toLowerCase();
     const planeAvatar = `assets/avatars/${enemyNameLower}_plane.png`;
 
+    const combatActions = document.getElementById('combat-actions');
+    if (combatActions) {
+      combatActions.style.display = 'none';
+    }
+
     const arenaContainer = document.querySelector('.arena-container');
     if (arenaContainer) {
-      arenaContainer.innerHTML = `
-        <div class="victory-screen-wrapper" style="width: 100%; text-align: center; padding: 20px; background: rgba(255, 71, 87, 0.1); border: 2px solid #ff4757; border-radius: 8px; animation: fadeIn 0.3s ease;">
-          <h2 style="color: #ff4757; font-size: 28px; font-weight: bold; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase;"> WINNER: ${combatState.currentEnemyName} 💀 </h2>
-          <div style="width: 100%; overflow: hidden; border-radius: 6px; border: 1px solid #444; background: #111; padding: 15px 0; display: flex; justify-content: center;">
-            <img src="${planeAvatar}" style="max-width: 100%; height: auto; image-rendering: pixelated; object-fit: contain;" alt="Victory Animation">
-          </div>
+      const victoryWrapper = document.createElement('div');
+      victoryWrapper.className = 'victory-screen-wrapper';
+      victoryWrapper.style.cssText = 'width: 100%; text-align: center; padding: 20px; background: rgba(255, 71, 87, 0.1); border: 2px solid #ff4757; border-radius: 8px; animation: fadeIn 0.3s ease;';
+      victoryWrapper.innerHTML = `
+        <h2 style="color: #ff4757; font-size: 28px; font-weight: bold; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase;"> WINNER: ${combatState.currentEnemyName} 💀 </h2>
+        <div style="width: 100%; overflow: hidden; border-radius: 6px; border: 1px solid #444; background: #111; padding: 15px 0; display: flex; justify-content: center;">
+          <img src="${planeAvatar}" style="max-width: 100%; height: auto; image-rendering: pixelated; object-fit: contain;" alt="Victory Animation">
         </div>
       `;
+      arenaContainer.appendChild(victoryWrapper);
     }
 
     onBattleEndCallback(false);
