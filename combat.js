@@ -24,6 +24,44 @@ export let combatState = {
   enemyEquipment: {} 
 };
 
+export function resetBattleUI() {
+  const victoryOverlay = document.getElementById('victory-overlay');
+  if (victoryOverlay) {
+    victoryOverlay.classList.add('hidden');
+    victoryOverlay.style.display = 'none';
+  }
+
+  const controlsPanel = document.getElementById('battle-controls');
+  if (controlsPanel) {
+    controlsPanel.style.display = 'block';
+    controlsPanel.classList.remove('hidden');
+  }
+
+  const arenaContainer = document.querySelector('.arena-container');
+  if (arenaContainer && arenaContainer.querySelector('.victory-screen-wrapper')) {
+    const playerAvatar = gameState.playerAvatar || 'assets/avatars/ren.gif';
+    const enemyAvatar = `assets/avatars/${(combatState.currentEnemyName || 'spider').toLowerCase()}.gif`;
+
+    arenaContainer.innerHTML = `
+      <div class="player-side">
+        <img id="arena-player-avatar" src="${playerAvatar}" alt="Player Avatar">
+      </div>
+      <div class="vs-badge">VS</div>
+      <div class="enemy-side">
+        <img id="arena-enemy-avatar" src="${enemyAvatar}" alt="Enemy Avatar">
+      </div>
+    `;
+  }
+
+  combatState.selectedAttackZone = '';
+  combatState.selectedDefendZones = [];
+
+  document.querySelectorAll('.btn-zone-attack').forEach(b => b.classList.remove('selected-attack'));
+  document.querySelectorAll('.btn-zone-defend').forEach(b => b.classList.remove('selected-defend'));
+
+  validateTurnReadiness();
+}
+
 export function spawnFloatingText(targetSide, text, type = 'damage') {
   const cardSelector = targetSide === 'player' ? '.player-side' : '.enemy-side';
   const targetCard = document.querySelector(cardSelector);

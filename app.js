@@ -8,7 +8,8 @@ import {
   enemyProfiles, 
   getEnemyStats, 
   saveCombatState, 
-  clearCombatState 
+  clearCombatState,
+  resetBattleUI
 } from './combat.js';
 import { ARTIFACTS_DATABASE } from './artifacts.js';
 import { soundManager } from './audio.js';
@@ -637,6 +638,12 @@ function setupEventListeners() {
   document.querySelector('.btn-enemy-select-back')?.addEventListener('click', () => showScreen('screen-home'));
 
   document.getElementById('btn-confirm-fight')?.addEventListener('click', () => {
+    clearCombatState();
+
+    if (typeof resetBattleUI === 'function') {
+      resetBattleUI();
+    }
+
     const { maxHP } = getPlayerStats();
     const enemyStats = getEnemyStats();
 
