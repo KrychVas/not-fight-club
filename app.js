@@ -13,7 +13,6 @@ import {
 import { ARTIFACTS_DATABASE } from './artifacts.js';
 import { soundManager } from './audio.js';
 
-// --- NAME VALIDATION HELPERS ---
 function validateAndGetPlayerName(rawName) {
   const trimmed = rawName ? rawName.trim() : '';
   if (!trimmed) {
@@ -31,7 +30,6 @@ function validateAndGetPlayerName(rawName) {
   return trimmed;
 }
 
-// Check active saved combat state in localStorage
 function hasSavedBattle() {
   const saved = localStorage.getItem('active_combat_state');
   if (!saved) return false;
@@ -43,7 +41,6 @@ function hasSavedBattle() {
   }
 }
 
-// Helper function for tooltip formatting
 function getArtifactTooltip(artifact) {
   if (!artifact) return '';
   return `${artifact.name} (${artifact.slot.toUpperCase()})\n${artifact.description}`;
@@ -59,7 +56,6 @@ function showScreen(screenId) {
     updateState({ currentScreen: screenId });
   }
 
-  // --- Automatic BGM switching on screen navigation ---
   if (screenId === 'screen-home' || screenId === 'screen-settings') {
     soundManager.playBGM('menu');
   } else if (screenId === 'screen-enemy-select' || screenId === 'screen-character') {
@@ -113,14 +109,12 @@ function init() {
   setupEventListeners();
   setupKeyboardControls();
 
-  // Якщо гравець був безпосередньо на екрані бою і натиснув F5 — повертаємо в бій
   if (gameState.playerName && gameState.currentScreen === 'screen-battle') {
     if (restoreSavedBattle()) {
       return;
     }
   }
 
-  // Якщо був на головному екрані або іншому — показуємо його
   if (gameState.playerName) {
     updateUI();
     showScreen(gameState.currentScreen === 'screen-registration' ? 'screen-home' : gameState.currentScreen);
@@ -178,7 +172,6 @@ function updateUI() {
     themeSelect.value = gameState.theme;
   }
 
-  // --- CONTINUE BATTLE BUTTON MANAGEMENT ---
   let continueBtn = document.getElementById('btn-continue-battle');
   const homeScreen = document.getElementById('screen-home');
 
@@ -187,7 +180,6 @@ function updateUI() {
       continueBtn = document.createElement('button');
       continueBtn.id = 'btn-continue-battle';
       
-      // Ті ж класи, що й у інших кнопок меню для однакового стилю
       continueBtn.className = 'btn-primary btn-menu'; 
       continueBtn.textContent = 'Return to Battle ⚔️';
       
@@ -654,7 +646,6 @@ function setupEventListeners() {
     });
   }
 
-  // --- SAVE COMBAT ON EXITING ARENA TO MENU ---
   document.querySelector('.btn-battle-back').addEventListener('click', () => {
     saveCombatState();
     

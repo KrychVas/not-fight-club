@@ -15,7 +15,6 @@
 
   <main id="app-container">
     
-    <!-- SCREEN 1: REGISTRATION -->
     <section id="screen-registration" class="screen">
       <h2>Fighter Registration</h2>
       <div class="form-group">
@@ -24,7 +23,6 @@
       </div>
     </section>
 
-    <!-- SCREEN 2: HOME MENU -->
     <section id="screen-home" class="screen hidden">
       <h2>Welcome, <span id="home-player-name">Fighter</span>!</h2>
       <div class="menu-buttons">
@@ -34,19 +32,16 @@
       </div>
     </section>
 
-    <!-- SCREEN: ENEMY SELECTION & PREP -->
     <section id="screen-enemy-select" class="screen hidden">
       <h2>Select Your Opponent</h2>
 
-      <!-- SELECT ENEMY AT THE TOP -->
       <div class="avatar-selection" style="margin-bottom: 15px;">
         <h4 style="font-size: 13px; color: #aaa; margin-bottom: 8px;">Choose Opponent:</h4>
         <div id="enemy-select-grid" class="enemy-select-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px;">
-          <!-- Dynamic enemy selector -->
+
         </div>
       </div>
 
-      <!-- SELECTED ENEMY CENTERED PROFILE -->
       <div id="selected-enemy-preview" style="display: none; margin-bottom: 15px;">
         <div class="character-profile" style="text-align: center; margin-bottom: 15px;">
           <img id="preview-enemy-avatar" src="" alt="Enemy Avatar" style="width: 80px; height: 80px; object-fit: contain;">
@@ -59,7 +54,6 @@
           </div>
         </div>
 
-        <!-- Enemy Equipment & Inventory -->
         <div class="artifacts-container">
           <h4 style="color: #eccc68; margin-bottom: 5px; text-align: center;">Equipped Items</h4>
           <div id="enemy-slots-grid" class="equipped-slots-grid">
@@ -72,7 +66,7 @@
 
           <h4 style="color: #aaa; margin-top: 15px; margin-bottom: 5px; text-align: center;">Inventory</h4>
           <div id="enemy-inventory-grid" class="inventory-grid">
-            <!-- Dynamic artifacts to equip enemy -->
+
           </div>
         </div>
       </div>
@@ -83,21 +77,18 @@
       <button class="btn-back btn-enemy-select-back" style="background-color: #555; margin-top: 10px; width: 100%;">Back to Menu</button>
     </section>
 
-    <!-- SCREEN 3: CHARACTER CARD -->
     <section id="screen-character" class="screen hidden">
       <h2>Character Selection</h2>
 
-      <!-- SELECT FIGHTER AT THE TOP -->
       <div class="avatar-selection" style="margin-bottom: 15px;">
         <h4 style="font-size: 13px; color: #aaa; margin-bottom: 8px;">Choose Your Fighter Avatar:</h4>
         <div id="player-avatar-grid" class="enemy-select-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px;">
-          <!-- Dynamic hero selector -->
+
         </div>
       </div>
 
-      <!-- SELECTED HERO PREVIEW -->
       <div id="selected-player-preview" style="display: none; margin-bottom: 15px;">
-        <!-- PROFILE DISPLAY -->
+
         <div class="character-profile" style="text-align: center; margin-bottom: 15px;">
           <img id="char-current-avatar" src="assets/avatars/ren.gif" alt="Current Avatar" style="width: 80px; height: 80px; object-fit: contain;">
           <h3 id="char-player-name" style="margin-top: 5px;">Fighter</h3>
@@ -110,7 +101,6 @@
           </div>
         </div>
 
-        <!-- ARTIFACTS & EQUIPMENT -->
         <div class="artifacts-container">
           <h4 style="color: #eccc68; margin-bottom: 5px; text-align: center;">Equipped Items</h4>
           <div class="equipped-slots-grid">
@@ -129,14 +119,12 @@
       <button class="btn-back btn-character-back" style="background-color: #555; margin-top: 20px;">Back to Menu</button>
     </section>
 
-    <!-- SCREEN 4: SETTINGS -->
     <section id="screen-settings" class="screen hidden">
       <h2>Settings</h2>
       <div class="form-group">
         <label for="settings-name" style="text-align: left; font-size: 14px; color: #aaa;">Change Fighter's Name:</label>
         <input type="text" id="settings-name" placeholder="Enter new name..." autocomplete="off">
         
-        <!-- AUDIO & THEME CONTROLS PANEL -->
         <div style="margin: 15px 0; background: #222; padding: 12px; border-radius: 6px; border: 1px solid #444;">
           <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: #ddd; font-size: 14px; margin-bottom: 10px;">
             <span>🔊 Sound Effects (SFX):</span>

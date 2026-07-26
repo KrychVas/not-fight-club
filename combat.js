@@ -21,10 +21,9 @@ export let combatState = {
   currentEnemyName: '',
   selectedAttackZone: '',
   selectedDefendZones: [],
-  enemyEquipment: {} // Об'єкт екіпіровки ворога: { slot: artifactId }
+  enemyEquipment: {} 
 };
 
-// --- FLOATING TEXT (VFX) SYSTEM ---
 export function spawnFloatingText(targetSide, text, type = 'damage') {
   const cardSelector = targetSide === 'player' ? '.player-side' : '.enemy-side';
   const targetCard = document.querySelector(cardSelector);
@@ -45,7 +44,6 @@ export function spawnFloatingText(targetSide, text, type = 'damage') {
   }, 1400);
 }
 
-// --- COMBAT PERSISTENCE ---
 export function saveCombatState() {
   const battleLogEl = document.getElementById('battle-log');
   const logHTML = battleLogEl ? battleLogEl.innerHTML : '';
@@ -67,7 +65,6 @@ export function clearCombatState() {
   localStorage.removeItem('active_combat_state');
 }
 
-// --- RESTORE COMBAT STATE ---
 export function restoreActiveBattle(navigateToScreenCallback) {
   const savedCombat = localStorage.getItem('active_combat_state');
   if (!savedCombat) return false;
@@ -75,30 +72,25 @@ export function restoreActiveBattle(navigateToScreenCallback) {
   try {
     const data = JSON.parse(savedCombat);
 
-    // Перевіряємо, чи бій не був завершений
     if (!data.isInBattle || data.playerHP <= 0 || data.enemyHP <= 0) {
       clearCombatState();
       return false;
     }
 
-    // 1. Відновлюємо дані бою
     combatState.playerHP = data.playerHP;
     combatState.enemyHP = data.enemyHP;
     combatState.enemyMaxHP = data.enemyMaxHP;
     combatState.currentEnemyName = data.currentEnemyName;
     combatState.enemyEquipment = data.enemyEquipment || {};
 
-    // 2. Відновлюємо лог бою
     const battleLogEl = document.getElementById('battle-log');
     if (battleLogEl && data.battleLogHTML) {
       battleLogEl.innerHTML = data.battleLogHTML;
       battleLogEl.scrollTop = battleLogEl.scrollHeight;
     }
 
-    // 3. Оновлюємо графіку HP bars
     updateHPBars();
 
-    // 4. Переходимо на екран бою
     if (typeof navigateToScreenCallback === 'function') {
       navigateToScreenCallback('screen-battle');
     }
@@ -198,7 +190,6 @@ function getRandomZones(count) {
   return result;
 }
 
-// Функція анімації удару бійця
 function triggerHitAnimation(isPlayer, baseAvatarPath) {
   const imgElement = document.getElementById(isPlayer ? 'arena-player-avatar' : 'arena-enemy-avatar');
   if (!imgElement) return;
@@ -213,7 +204,6 @@ function triggerHitAnimation(isPlayer, baseAvatarPath) {
   }, 1200);
 }
 
-// Ефект трясіння екрана
 function triggerScreenShake() {
   const battleScreen = document.getElementById('screen-battle');
   if (!battleScreen) return;
@@ -236,7 +226,6 @@ export function executeCombatTurn(onBattleEndCallback) {
 
   let hasHitInTurn = false;
 
-  // 1. Атака Гравця
   const isPlayerCrit = Math.random() < 0.15;
   const isEnemyBlockingPlayer = enemyDefends.includes(combatState.selectedAttackZone);
 
@@ -260,7 +249,6 @@ export function executeCombatTurn(onBattleEndCallback) {
 
     combatState.enemyHP = Math.max(0, combatState.enemyHP - damage);
     
-    // Оновлюємо HP bar ворога негайно після завдання шкоди
     updateHPBars();
     
     logMessage(`💥 ${gameState.playerName} hits ${combatState.currentEnemyName} in the ${combatState.selectedAttackZone} for ${damage} HP! ${critText}`, 'player');
@@ -268,7 +256,6 @@ export function executeCombatTurn(onBattleEndCallback) {
     triggerHitAnimation(false, enemyAvatarBase);
   }
 
-  // 2. Атаки Ворога
   enemyAttacks.forEach(attackZone => {
     const isEnemyCrit = Math.random() < 0.15;
     const isPlayerBlockingEnemy = combatState.selectedDefendZones.includes(attackZone);
@@ -293,7 +280,6 @@ export function executeCombatTurn(onBattleEndCallback) {
 
       combatState.playerHP = Math.max(0, combatState.playerHP - damage);
       
-      // Оновлюємо HP bar гравця негайно після завдання шкоди
       updateHPBars();
       
       logMessage(`💥 ${combatState.currentEnemyName} hits ${gameState.playerName} in the ${attackZone} for ${damage} HP! ${critText}`, 'enemy');
@@ -306,7 +292,6 @@ export function executeCombatTurn(onBattleEndCallback) {
     triggerScreenShake();
   }
 
-  // Фінальне підтвердження оновлення графіки інтерфейсу
   updateHPBars();
 
   combatState.selectedAttackZone = '';
@@ -316,10 +301,8 @@ export function executeCombatTurn(onBattleEndCallback) {
   });
   validateTurnReadiness();
 
-  // --- ЗБЕРЕЖЕННЯ СТАНУ БОЮ ПІСЛЯ ХОДУ ---
   saveCombatState();
 
-  // 3. Перевірка результату бою
   if (combatState.playerHP <= 0 && combatState.enemyHP <= 0) {
     clearCombatState();
     soundManager.playDefeatSound();

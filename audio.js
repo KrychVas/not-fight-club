@@ -1,5 +1,3 @@
-// --- AUDIO SYSTEM (Sound Manager with OGG BGM & Web Audio SFX) ---
-
 class SoundManager {
   constructor() {
     this.audioCtx = null;
@@ -7,16 +5,14 @@ class SoundManager {
     this.isBGMMuted = false;
     this.sfxVolume = 0.5;
 
-    // Плейлист треків
     this.tracks = {
-      menu: new Audio('assets/audio/Common Fight.ogg'),     // Головне меню та Налаштування
-      select: new Audio('assets/audio/Central City.ogg'),  // Вибір бійця та підготовка
-      battle: new Audio('assets/audio/Chiptronical.ogg'),  // Звичайні бої на арені
-      boss: new Audio('assets/audio/Boss Fight.ogg'),      // Бій проти боса (Boss)
-      gameOver: new Audio('assets/audio/Game Over.ogg')   // Музика поразки
+      menu: new Audio('assets/audio/Common Fight.ogg'),     
+      select: new Audio('assets/audio/Central City.ogg'),  
+      battle: new Audio('assets/audio/Chiptronical.ogg'),  
+      boss: new Audio('assets/audio/Boss Fight.ogg'),     
+      gameOver: new Audio('assets/audio/Game Over.ogg')   
     };
 
-    // Налаштування фонових треків (зациклення та гучність)
     ['menu', 'select', 'battle', 'boss'].forEach(key => {
       this.tracks[key].loop = true;
       this.tracks[key].volume = 0.25;
@@ -39,12 +35,9 @@ class SoundManager {
     }
   }
 
-  // --- BACKGROUND MUSIC SYSTEM ---
-
   playBGM(trackKey = 'menu') {
     if (this.isBGMMuted || !this.tracks[trackKey]) return;
 
-    // Якщо той самий трек вже грає — не перезапускаємо його
     if (this.currentTrackKey === trackKey && this.currentTrack && !this.currentTrack.paused) {
       return;
     }
@@ -82,9 +75,6 @@ class SoundManager {
     this.isSFXMuted = isMuted;
   }
 
-  // --- SOUND EFFECTS (SFX via Web Audio API) ---
-
-  // Генерація синтезованого звуку удару (Punch SFX)
   playHitSound(isCrit = false) {
     if (this.isSFXMuted) return;
     this.init();
@@ -111,7 +101,6 @@ class SoundManager {
     osc.stop(this.audioCtx.currentTime + (isCrit ? 0.3 : 0.15));
   }
 
-  // Звук заблокованого удару (Block SFX)
   playBlockSound() {
     if (this.isSFXMuted) return;
     this.init();
@@ -134,7 +123,6 @@ class SoundManager {
     osc.stop(this.audioCtx.currentTime + 0.1);
   }
 
-  // Звук перемоги (Victory Fanfare)
   playVictorySound() {
     if (this.isSFXMuted) return;
     this.init();
@@ -160,7 +148,6 @@ class SoundManager {
     });
   }
 
-  // Звук поразки (Грає трек Game Over)
   playDefeatSound() {
     this.stopBGM();
     if (!this.isBGMMuted) {
