@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👊</text></svg>">
+  <title>Not Fight Club</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>👊 Not Fight Club</h1>
+  </header>
+
+  <main id="app-container">
+    
+    <section id="screen-registration" class="screen">
+      <h2>Fighter Registration</h2>
+      <div class="form-group">
+        <input type="text" id="reg-name" placeholder="Enter your fighter's name..." autocomplete="off">
+        <button id="btn-register">Enter the Club [Enter]</button>
+      </div>
+    </section>
+
+    <section id="screen-home" class="screen hidden">
+      <h2>Welcome, <span id="home-player-name">Fighter</span>!</h2>
+      <div class="menu-buttons">
+        <button id="btn-start-battle" class="btn-primary">Select Opponent ⚔️</button>
+        <button id="btn-to-character">My Character 🛡️</button>
+        <button id="btn-to-settings">Settings ⚙️</button>
+      </div>
+    </section>
+
+    <section id="screen-enemy-select" class="screen hidden">
+      <h2>Select Your Opponent</h2>
+
+      <div class="avatar-selection" style="margin-bottom: 15px;">
+        <h4 style="font-size: 13px; color: #aaa; margin-bottom: 8px;">Choose Opponent:</h4>
+        <div id="enemy-select-grid" class="enemy-select-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px;">
+
+        </div>
+      </div>
+
+      <div id="selected-enemy-preview" style="display: none; margin-bottom: 15px;">
+        <div class="character-profile" style="text-align: center; margin-bottom: 15px;">
+          <img id="preview-enemy-avatar" src="" alt="Enemy Avatar" style="width: 80px; height: 80px; object-fit: contain;">
+          <h3 id="preview-enemy-name" style="margin-top: 5px; color: #ff4757;">Enemy Name</h3>
+          <p id="preview-enemy-bio" style="font-size: 12px; color: #aaa; margin: 4px 0 8px; font-style: italic;">Opponent Bio</p>
+
+          <div class="player-stats-summary" style="display: flex; justify-content: center; gap: 15px; margin-top: 6px; font-weight: bold; font-size: 14px;">
+            <span style="color: #ff4757;">⚔️ Attack: <span id="preview-enemy-dmg">15</span></span>
+            <span style="color: #2ed573;">❤️ Max HP: <span id="preview-enemy-hp">100</span></span>
+          </div>
+        </div>
+
+        <div class="artifacts-container">
+          <h4 style="color: #eccc68; margin-bottom: 5px; text-align: center;">Equipped Items</h4>
+          <div id="enemy-slots-grid" class="equipped-slots-grid">
+            <div class="artifact-slot enemy-slot" data-slot="helmet" title="Helmet Slot"><span>🪖 Helm</span></div>
+            <div class="artifact-slot enemy-slot" data-slot="weapon" title="Weapon Slot"><span>⚔️ Weapon</span></div>
+            <div class="artifact-slot enemy-slot" data-slot="armor" title="Armor Slot"><span>🥋 Armor</span></div>
+            <div class="artifact-slot enemy-slot" data-slot="boots" title="Boots Slot"><span>🥾 Boots</span></div>
+            <div class="artifact-slot enemy-slot" data-slot="ring" title="Ring Slot"><span>✨ Ring</span></div>
+          </div>
+
+          <h4 style="color: #aaa; margin-top: 15px; margin-bottom: 5px; text-align: center;">Inventory</h4>
+          <div id="enemy-inventory-grid" class="inventory-grid">
+
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-confirm-fight" class="btn-primary" disabled style="opacity: 0.5; cursor: not-allowed; width: 100%;">
+        ENTER ARENA 👊
+      </button>
+      <button class="btn-back btn-enemy-select-back" style="background-color: #555; margin-top: 10px; width: 100%;">Back to Menu</button>
+    </section>
+
+    <section id="screen-character" class="screen hidden">
+      <h2>Character Selection</h2>
+
+      <div class="avatar-selection" style="margin-bottom: 15px;">
+        <h4 style="font-size: 13px; color: #aaa; margin-bottom: 8px;">Choose Your Fighter Avatar:</h4>
+        <div id="player-avatar-grid" class="enemy-select-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px;">
+
+        </div>
+      </div>
+
+      <div id="selected-player-preview" style="display: none; margin-bottom: 15px;">
+
+        <div class="character-profile" style="text-align: center; margin-bottom: 15px;">
+          <img id="char-current-avatar" src="assets/avatars/ren.gif" alt="Current Avatar" style="width: 80px; height: 80px; object-fit: contain;">
+          <h3 id="char-player-name" style="margin-top: 5px;">Fighter</h3>
+          <p id="char-player-bio" style="font-size: 12px; color: #aaa; margin: 4px 0; font-style: italic;"></p>
+          <p class="stats" style="font-size: 12px; color: #888;">Wins: <span id="char-wins">0</span> | Losses: <span id="char-losses">0</span></p>
+          
+          <div class="player-stats-summary" style="display: flex; justify-content: center; gap: 15px; margin-top: 6px; font-weight: bold; font-size: 14px;">
+            <span style="color: #ff4757;">⚔️ Attack: <span id="char-stat-dmg">15</span></span>
+            <span style="color: #2ed573;">❤️ Max HP: <span id="char-stat-hp">100</span></span>
+          </div>
+        </div>
+
+        <div class="artifacts-container">
+          <h4 style="color: #eccc68; margin-bottom: 5px; text-align: center;">Equipped Items</h4>
+          <div class="equipped-slots-grid">
+            <div class="artifact-slot" data-slot="helmet" title="Helmet Slot"><span>🪖 Helm</span></div>
+            <div class="artifact-slot" data-slot="weapon" title="Weapon Slot"><span>⚔️ Weapon</span></div>
+            <div class="artifact-slot" data-slot="armor" title="Armor Slot"><span>🥋 Armor</span></div>
+            <div class="artifact-slot" data-slot="boots" title="Boots Slot"><span>🥾 Boots</span></div>
+            <div class="artifact-slot" data-slot="ring" title="Ring Slot"><span>✨ Ring</span></div>
+          </div>
+
+          <h4 style="color: #aaa; margin-top: 15px; margin-bottom: 5px; text-align: center;">Inventory</h4>
+          <div id="inventory-grid" class="inventory-grid"></div>
+        </div>
+      </div>
+
+      <button class="btn-back btn-character-back" style="background-color: #555; margin-top: 20px;">Back to Menu</button>
+    </section>
+
+    <section id="screen-settings" class="screen hidden">
+      <h2>Settings</h2>
+      <div class="form-group">
+        <label for="settings-name" style="text-align: left; font-size: 14px; color: #aaa;">Change Fighter's Name:</label>
+        <input type="text" id="settings-name" placeholder="Enter new name..." autocomplete="off">
+        
+        <div style="margin: 15px 0; background: #222; padding: 12px; border-radius: 6px; border: 1px solid #444;">
+          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: #ddd; font-size: 14px; margin-bottom: 10px;">
+            <span>🔊 Sound Effects (SFX):</span>
+            <input type="checkbox" id="setting-sfx-toggle" checked style="width: 20px; height: 20px; cursor: pointer;">
+          </label>
+
+          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: #ddd; font-size: 14px; margin-bottom: 12px;">
+            <span>🎵 Background Music (BGM):</span>
+            <input type="checkbox" id="setting-bgm-toggle" style="width: 20px; height: 20px; cursor: pointer;">
+          </label>
+
+          <label style="display: block; color: #aaa; font-size: 13px; text-align: left; margin-bottom: 4px;">
+            🖼️ Arena Theme (Background):
+          </label>
+          <select id="setting-theme-select" style="width: 100%; padding: 6px; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px; cursor: pointer;">
+            <option value="theme-default">Dark Arena (Classic)</option>
+            <option value="theme-cyberpunk">Cyberpunk Neon 🌆</option>
+            <option value="theme-dojo">Traditional Dojo 🥋</option>
+            <option value="theme-dungeon">Dungeon Pit 💀</option>
+          </select>
+        </div>
+
+        <button id="btn-save-settings">Save Changes 💾</button>
+        <button id="btn-reset-game" style="background-color: #3e3e3e; margin-top: 10px;">Reset Progress 🔄</button>
+        <button class="btn-back btn-settings-back" style="background-color: #555; margin-top: 20px;">Back to Menu</button>
+      </div>
+    </section>
+
+    <!-- SCREEN 5: BATTLE ARENA -->
+    <section id="screen-battle" class="screen hidden">
+      <h2>Battle Arena</h2>
+      
+      <div class="arena-container">
+        <div class="fighter-card player-side">
+          <h3>Your Fighter</h3>
+          <img id="arena-player-avatar" src="assets/avatars/ren.gif" alt="Player">
+          <div id="arena-player-name" class="fighter-name">Fighter</div>
+          <div class="hp-bar-container">
+            <div id="player-hp-bar" class="hp-bar"></div>
+          </div>
+          <div id="player-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
+        </div>
+
+        <div id="combat-actions" class="combat-actions">
+          <h4>Choose 1 attack and 2 defence zones</h4>
+          
+          <div class="zones-columns-wrapper">
+            <div class="zone-column">
+              <span style="color: #ff4757; font-size: 12px; font-weight: bold; margin-bottom: 5px;">⚡ ATTACK</span>
+              <button type="button" class="btn-zone-attack" data-zone="Head">[1] Head 🪖</button>
+              <button type="button" class="btn-zone-attack" data-zone="Neck">[2] Neck 🎯</button>
+              <button type="button" class="btn-zone-attack" data-zone="Body">[3] Body 🥋</button>
+              <button type="button" class="btn-zone-attack" data-zone="Belly">[4] Belly 🔥</button>
+              <button type="button" class="btn-zone-attack" data-zone="Legs">[5] Legs 🥾</button>
+            </div>
+
+            <div class="zone-divider" style="width: 1px; background: #444; align-self: stretch;"></div>
+
+            <div class="zone-column">
+              <span style="color: #2ed573; font-size: 12px; font-weight: bold; margin-bottom: 5px;">🛡️ DEFEND</span>
+              <button type="button" class="btn-zone-defend" data-zone="Head">[Q] Head 🪖</button>
+              <button type="button" class="btn-zone-defend" data-zone="Neck">[W] Neck 🎯</button>
+              <button type="button" class="btn-zone-defend" data-zone="Body">[E] Body 🥋</button>
+              <button type="button" class="btn-zone-defend" data-zone="Belly">[R] Belly 🔥</button>
+              <button type="button" class="btn-zone-defend" data-zone="Legs">[T] Legs 🥾</button>
+            </div>
+          </div>
+
+          <div id="selected-zones-indicator" style="margin: 5px 0; font-size: 12px; font-weight: bold; color: #eccc68; background: #222; padding: 4px 10px; border-radius: 4px; border: 1px solid #444; text-align: center; width: 90%;">
+            🎯 A: <span id="indicator-attack" style="color: #ff4757;">None</span> | 🛡️ D: <span id="indicator-defend" style="color: #2ed573;">None</span>
+          </div>
+
+          <button id="btn-end-turn" class="btn-primary" disabled style="margin-top: 10px; width: 100%; max-width: 200px; opacity: 0.5; cursor: not-allowed; background-color: #eccc68; color: #000; padding: 8px;">
+            EXECUTE TURN ⚔️ [Space]
+          </button>
+        </div>
+
+        <div class="fighter-card enemy-side">
+          <h3>Enemy</h3>
+          <img id="arena-enemy-avatar" src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22 x=%2215%22>❓</text></svg>" alt="Enemy">
+          <div id="arena-enemy-name" class="fighter-name">Enemy</div>
+          <div class="hp-bar-container">
+            <div id="enemy-hp-bar" class="hp-bar"></div>
+          </div>
+          <div id="enemy-hp-text" style="font-size: 12px; color: #aaa; margin-top: 2px;">100 / 100</div>
+        </div>
+
+      </div>
+
+      <div id="battle-log" class="battle-log">
+        <div class="log-message log-system">⚔️ Battle initialized! Choose your actions...</div>
+      </div>
+
+      <div class="battle-actions">
+        <button class="btn-back btn-battle-back" style="background-color: #555; margin-top: 10px; width: 100%;">Back to Menu</button>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
